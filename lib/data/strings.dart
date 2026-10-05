@@ -169,7 +169,9 @@ abstract final class S {
 
   // ---------------------------------------------------------------- 오류
   static const errorGenerateFailed = "Couldn't make this motion";
-  static const errorGenerateFailedBody = 'Something went wrong. Try again in a moment.';
+  /// 시안 06-E1 `480:3035` 의 문구.
+  static const errorGenerateFailedBody =
+      'Try a clearer video, or tell me in words how it should move.';
   static const errorOffline = 'Using demo motions while offline';
   static const errorNameTaken = 'That name is already used';
   static const errorNameEmpty = 'Enter a name';

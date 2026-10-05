@@ -13,7 +13,6 @@ import '../models/saved_motion.dart';
 import '../providers/chat_provider.dart';
 import '../providers/generation_provider.dart';
 import '../providers/library_provider.dart';
-import '../providers/profile_provider.dart';
 import '../providers/robot_provider.dart';
 import '../services/generation/generation_client.dart';
 import '../services/motion_engine.dart';
@@ -28,6 +27,7 @@ import '../widgets/app_icon.dart';
 import '../widgets/composer.dart';
 import '../widgets/gray_box.dart';
 import '../widgets/pure_chip.dart';
+import '../widgets/pure_sidebar.dart';
 import '../widgets/pure_top_bar.dart';
 import '../widgets/robot_card.dart';
 import '../widgets/save_sheet.dart';
@@ -508,11 +508,13 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     }
 
-    final name = context.watch<ProfileProvider>().name;
-
     return Scaffold(
       backgroundColor: AppColors.bgCanvas,
       resizeToAvoidBottomInset: true,
+      // 시안에서 채팅은 **홈 그 자체**다 (프레임 이름이 둘 다 `06-1.home`).
+      // 메시지가 생기면 인사말·칩·글로우가 빠지고 말풍선이 그 자리를 채운다 —
+      // 상단바는 홈 그대로 햄버거 + 종이고 뒤로가기는 없다.
+      drawer: const PureSidebar(),
       // 시안 06-6: `Chat` 영역의 아래 끝이 입력창 위와 정확히 맞닿는다.
       // 그래서 입력창을 띄워 얹지 않고 Column 의 마지막에 둔다 — 말풍선(과 그 위에
       // 올라타는 시뮬레이터)이 입력창을 덮지 않는다.
@@ -520,7 +522,7 @@ class _ChatScreenState extends State<ChatScreen> {
         bottom: false,
         child: Column(
           children: [
-            const PureBackBar(),
+            const PureTopBar(),
             Expanded(
               child: Stack(
                 children: [
@@ -533,12 +535,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       AppSpacing.x24,
                       AppSpacing.x20,
                     ),
-                    itemCount: messages.length + 1,
-                    // 인사말 다음만 36, 나머지는 20.
-                    separatorBuilder: (_, i) =>
-                        SizedBox(height: i == 0 ? 36 : AppSpacing.x20),
-                    itemBuilder: (context, i) =>
-                        i == 0 ? _Greeting(name: name) : _buildMessage(messages[i - 1]),
+                    itemCount: messages.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.x20),
+                    itemBuilder: (context, i) => _buildMessage(messages[i]),
                   ),
                   _TopFade(visible: _scrolled),
                 ],
@@ -640,18 +640,6 @@ class _QuestionBubble extends StatelessWidget {
         ),
       ],
     ],
-  );
-}
-
-/// 홈에서 보던 인사말이 채팅 맨 위에 그대로 이어진다 (시안 06-E1 `480:3015`).
-class _Greeting extends StatelessWidget {
-  const _Greeting({required this.name});
-  final String name;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    '${fill(S.homeGreetingLine1, {'name': name})}\n${S.homeGreetingLine2}',
-    style: AppTextStyles.homeGreeting,
   );
 }
 
