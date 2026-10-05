@@ -6,6 +6,7 @@ import '../data/strings.dart';
 import '../providers/notification_provider.dart';
 import '../providers/robot_provider.dart';
 import 'gray_box.dart';
+import 'pure_sidebar.dart';
 
 /// 모든 화면이 쓰는 셸 — 좌상단 햄버거 / 상단 로봇 상태 / 우상단 알림 (PRD §4 공통).
 class AppShell extends StatelessWidget {
@@ -37,7 +38,7 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Gray.bg,
-      drawer: onBack == null ? const AppSidebar() : null,
+      drawer: onBack == null ? const PureSidebar() : null,
       appBar: AppBar(
         backgroundColor: Gray.bg,
         surfaceTintColor: Colors.transparent,
@@ -156,74 +157,6 @@ class _NotificationBell extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// M-1 사이드바.
-class AppSidebar extends StatelessWidget {
-  const AppSidebar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    void go(String route, {bool replace = false}) {
-      Navigator.pop(context);
-      if (replace) {
-        Navigator.pushReplacementNamed(context, route);
-      } else {
-        Navigator.pushNamed(context, route);
-      }
-    }
-
-    return Drawer(
-      backgroundColor: Gray.card,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: const Text(S.menuNewMotion),
-              onTap: () => go('/home/new', replace: true),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.home_outlined),
-              title: const Text(S.menuHome),
-              onTap: () => go('/home', replace: true),
-            ),
-            ListTile(
-              leading: const Icon(Icons.grid_view_outlined),
-              title: const Text(S.menuLibrary),
-              onTap: () => go('/library'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.smart_toy_outlined),
-              title: const Text(S.menuRobot),
-              onTap: () => go('/robot'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text(S.menuActivityHistory),
-              onTap: () => go('/robot/activity'),
-            ),
-            const Divider(height: 1),
-            const GraySectionLabel(S.menuRecentChats),
-            ListTile(
-              dense: true,
-              title: const Text(S.menuSeeAll),
-              onTap: () => go('/chats'),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text(S.menuMeSettings),
-              onTap: () => go('/me'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

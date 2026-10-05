@@ -21,7 +21,22 @@ enum AppIconName {
   mic('mic.svg'),
 
   /// 상단 알림 종 (24.55).
-  bell('bell.svg');
+  bell('bell.svg'),
+
+  // ---- 사이드바 ----
+
+  /// 프로필 아바타 안 (22).
+  person('person.svg'),
+
+  /// 로봇 연결 상태 점 (7).
+  dot('dot.svg'),
+
+  navHome('nav_home.svg'),
+  navLibrary('nav_library.svg'),
+  navRobot('nav_robot.svg'),
+  navActivity('nav_activity.svg'),
+  navNotifications('nav_notifications.svg'),
+  navSettings('nav_settings.svg');
 
   const AppIconName(this.file);
   final String file;

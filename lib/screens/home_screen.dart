@@ -9,8 +9,8 @@ import '../providers/chat_provider.dart';
 import '../providers/profile_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
-import '../widgets/app_shell.dart';
 import '../widgets/composer.dart';
+import '../widgets/pure_sidebar.dart';
 import '../widgets/pure_chip.dart';
 import '../widgets/pure_top_bar.dart';
 
@@ -36,6 +36,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  /// 개발용 — 사이드바를 연 채로 띄워 스크린샷으로 확인한다.
+  ///   ./scripts/dev.sh install --dart-define=OPEN_DRAWER=true
+  static const bool _openDrawerOnStart = bool.fromEnvironment('OPEN_DRAWER');
+
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _text = TextEditingController();
   final _composerKey = GlobalKey<ComposerState>();
   String? _pendingChipId;
@@ -47,6 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.startNewChat) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.read<ChatProvider>().startNew();
+      });
+    }
+    if (_openDrawerOnStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scaffoldKey.currentState?.openDrawer();
       });
     }
   }
@@ -97,9 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final name = context.watch<ProfileProvider>().name;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.bgCanvas,
       resizeToAvoidBottomInset: true,
-      drawer: const AppSidebar(),
+      drawer: const PureSidebar(),
       body: Stack(
         children: [
           const _HomeGlow(),
