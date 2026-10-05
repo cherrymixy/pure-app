@@ -4,7 +4,7 @@
  */
 
 import { install, type PureApi } from './api';
-import { publicPose } from './runtime';
+import { faceStatus, publicPose } from './runtime';
 
 declare global {
   interface Window {
@@ -38,7 +38,12 @@ window.pure = install(canvas, (p: unknown) => {
  * 그대로 자동 검사하기 위해서다. Flutter 는 이 쿼리를 붙이지 않으므로 앱에서는 닫혀 있다.
  */
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('probe')) {
-  (window as unknown as { __simPose: () => Record<string, number> }).__simPose = publicPose;
+  const w = window as unknown as {
+    __simPose: () => Record<string, number>;
+    __simFace: () => Record<string, unknown>;
+  };
+  w.__simPose = publicPose;
+  w.__simFace = faceStatus;
 }
 
 window.pure.ready.then(

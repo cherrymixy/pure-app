@@ -491,6 +491,10 @@ export function capture(): string {
 
 export const isReady = (): boolean => sim !== null && viewer !== null;
 
+/** 표정 영상 재생 상태. 검증용. */
+export const faceStatus = (): Record<string, unknown> =>
+  viewer ? (viewer.faceStatus as unknown as Record<string, unknown>) : { has: false };
+
 /**
  * 루프를 멈추고 자원을 놓는다. 앱에서는 WebView 인스턴스가 하나뿐이라 호출할 일이 없지만,
  * blob URL 과 영상 디코더를 쥔 채로 두면 핫 리로드 때 누수가 쌓인다.

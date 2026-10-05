@@ -39,4 +39,12 @@ flutter:
 
   assets:
     - assets/images/
+    # Flutter 의 폴더 선언은 하위 폴더를 포함하지 않는다. sim 번들의 모든 폴더를
+    # 하나씩 적어야 한다 — 빠뜨리면 로컬 서버가 200 에 0바이트를 돌려줘 조용히 실패한다.
+    # scripts/build_sim.sh 가 빌드할 때마다 이 목록을 검사한다.
     - assets/sim/
+    - assets/sim/assets/
+    - assets/sim/mujoco/
+    - assets/sim/pure-desk/faces/
+    - assets/sim/pure-desk/model/
+    - assets/sim/pure-desk/model/assets/

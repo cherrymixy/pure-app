@@ -345,6 +345,21 @@ export class LampViewer {
     material.needsUpdate = true;
   }
 
+  /**
+   * 표정 영상의 재생 상태. PURE 추가 — iOS WKWebView 에서 blob 영상이 실제로 디코드되고
+   * 흐르는지 확인할 방법이 이것밖에 없다(캔버스 픽셀은 로봇이 움직여서 항상 바뀐다).
+   */
+  get faceStatus(): { has: boolean; time: number; paused: boolean; readyState: number; w: number } {
+    const v = this.video;
+    return {
+      has: v !== null,
+      time: v?.currentTime ?? -1,
+      paused: v?.paused ?? true,
+      readyState: v?.readyState ?? -1,
+      w: v?.videoWidth ?? 0,
+    };
+  }
+
   /** 뷰어를 버릴 때 — 영상 디코더와 GPU 자원을 놓는다. */
   dispose(): void {
     if (this.video) {
