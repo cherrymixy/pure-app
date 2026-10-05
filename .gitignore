@@ -1,0 +1,54 @@
+# ── macOS ──
+.DS_Store
+
+# ── 참고용 웹 레포 (빌드 제외, git 제외) ──
+_ref/
+
+# ── 비밀 (OpenAI 키는 --dart-define 으로만) ──
+.env
+.env.*
+*.pem
+*.p12
+
+# ── Flutter / Dart ──
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# ── iOS ──
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.*
+**/*.mode1v3
+**/*.mode2v3
+**/*.perspectivev3
+**/*.pbxuser
+**/xcuserdata/
+**/DerivedData/
+
+# ── sim/ (Vite) ──
+sim/node_modules/
+sim/dist/
+sim/.vite/
+
+# ── sim 빌드 산출물 (scripts/build_sim.sh 로 생성) ──
+assets/sim/
+
+# ── OMC 운영 산출물 (.omc/skills 는 예외) ──
+.omc/*
+!.omc/skills/
