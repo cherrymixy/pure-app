@@ -11,7 +11,9 @@ import 'providers/voice_provider.dart';
 import 'providers/robot_provider.dart';
 import 'repositories/data_repository.dart';
 import 'repositories/local_repository.dart';
-import 'screens/sim_debug_screen.dart';
+import 'app_routes.dart';
+import 'sim/sim_host.dart';
+import 'widgets/app_shell.dart';
 import 'services/generation/generation_service.dart';
 import 'services/thumbnail_store.dart';
 import 'services/video_input_service.dart';
@@ -57,11 +59,23 @@ class PureApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => VoiceProvider(VoiceInputService())),
       ],
-      child: MaterialApp(
-        title: 'PURE',
-        debugShowCheckedModeBanner: false,
-        // STEP 3 확인용. STEP 10 에서 실제 화면(00 스플래시 → 06 홈)으로 바뀐다.
-        home: const SimDebugScreen(),
+      child: Builder(
+        builder: (context) => MaterialApp(
+          title: 'PURE',
+          debugShowCheckedModeBanner: false,
+          initialRoute: AppRoutes.splash,
+          onGenerateRoute: AppRoutes.onGenerateRoute,
+          builder: (context, child) {
+            // 시뮬레이터 WebView 는 앱에 하나뿐이고 화면 위를 떠다닌다.
+            // 스플래시가 떠 있는 동안 뒤에서 wasm 을 올린다.
+            return SimHost(
+              child: DemoModeToggle(
+                toggle: context.read<GenerationProvider>().toggleDemoMode,
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
