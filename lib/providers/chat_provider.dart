@@ -106,6 +106,28 @@ class ChatProvider extends ChangeNotifier {
     return msg;
   }
 
+  /// 로봇이 되묻는다 — 질문 한 줄 + 추천 답안.
+  ///
+  /// 질문형(06-9)이 별도 화면에서 채팅 안으로 들어오면서 생겼다. 답은 평범한
+  /// 사용자 메시지로 남으므로, 나중에 대화를 다시 열어도 문답이 그대로 보인다.
+  Future<Message> addQuestion({
+    required String text,
+    required List<MessageChoice> choices,
+  }) async {
+    final chatId = await ensureCurrent();
+    final chat = _repo.chatById(chatId)!;
+    final msg = Message(
+      id: 'msg.${_newId()}',
+      sender: Sender.robot,
+      text: text,
+      choices: choices,
+      status: MessageStatus.done,
+      createdAt: _now(),
+    );
+    await _commit(chat.copyWith(messages: [...chat.messages, msg]));
+    return msg;
+  }
+
   /// 생성 중 자리(점 3개)를 만든다. 반환한 id 로 나중에 채운다.
   Future<Message> addPendingReply() async {
     final chatId = await ensureCurrent();

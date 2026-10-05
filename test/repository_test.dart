@@ -360,6 +360,44 @@ void main() {
       expect(chat.messages.last.status, MessageStatus.failed);
     });
 
+    test('되묻는 질문과 답안이 대화에 남는다 (옛 06-9 가 채팅 안으로)', () async {
+      final repo = await freshRepo();
+      final chat = ChatProvider(repo);
+      await chat.addUserMessage(text: 'Someone came home');
+      await chat.addQuestion(
+        text: 'When should Purebot do this?',
+        choices: const [
+          MessageChoice(id: 'someoneComesHome', label: 'Someone comes home'),
+          MessageChoice(id: 'iGetBack', label: 'I get back from work'),
+        ],
+      );
+
+      final asked = chat.messages.last;
+      expect(asked.sender, Sender.robot);
+      expect(asked.isQuestion, isTrue);
+      expect(asked.choices.map((c) => c.id), ['someoneComesHome', 'iGetBack']);
+
+      // 답은 평범한 사용자 메시지라 기록이 문답 그대로 남는다.
+      await chat.addUserMessage(text: 'I get back from work');
+      expect(chat.messages.map((m) => m.sender),
+          [Sender.user, Sender.robot, Sender.user]);
+
+      // 저장했다 다시 읽어도 답안이 살아 있어야 한다.
+      final restored = Message.fromJson(asked.toJson());
+      expect(restored.choices, hasLength(2));
+      expect(restored.choices.last.label, 'I get back from work');
+      expect(restored.isQuestion, isTrue);
+    });
+
+    test('모션 답장에는 답안이 없다', () async {
+      final repo = await freshRepo();
+      final chat = ChatProvider(repo);
+      final p = await chat.addPendingReply();
+      expect(chat.messages.last.isQuestion, isFalse);
+      // 답안이 없으면 JSON 에 키 자체를 넣지 않는다.
+      expect(p.toJson().containsKey('choices'), isFalse);
+    });
+
     test('대화를 열고 닫고 지운다', () async {
       final repo = await freshRepo();
       final chat = ChatProvider(repo);

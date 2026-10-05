@@ -5,7 +5,6 @@ import 'screens/chat_history_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/preview_screen.dart';
-import 'screens/question_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/library_search_screen.dart';
 import 'screens/me_screen.dart';
@@ -25,7 +24,6 @@ abstract final class AppRoutes {
   static const chat = '/chat';
   static const chats = '/chats';
   static const preview = '/preview';
-  static const question = '/question';
   static const signature = '/signature';
   static const library = '/library';
   static const librarySearch = '/library/search';
@@ -79,8 +77,6 @@ abstract final class AppRoutes {
         page = ChatScreen(entry: settings.arguments as ChatEntry?);
       case chats:
         page = const ChatHistoryScreen();
-      case question:
-        page = QuestionScreen(entry: settings.arguments! as ChatEntry);
       case preview:
         return PageRouteBuilder<void>(
           settings: settings,

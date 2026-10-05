@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_routes.dart';
+import '../data/question_tree.dart';
 import '../data/strings.dart';
 import '../models/message.dart';
 import '../models/motion_spec.dart';
@@ -26,6 +27,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/composer.dart';
 import '../widgets/gray_box.dart';
+import '../widgets/pure_chip.dart';
 import '../widgets/pure_top_bar.dart';
 import '../widgets/robot_card.dart';
 import '../widgets/save_sheet.dart';
@@ -71,6 +73,22 @@ class _ChatScreenState extends State<ChatScreen> {
   /// 위쪽 페이드는 스크롤이 시작돼야 보인다 (시안 06-E1 은 opacity 0).
   bool _scrolled = false;
 
+  // ------------------------------------------------- 되묻기 (옛 06-9 질문형)
+  //
+  // 칩이나 음성으로 들어오면 바로 만들지 않고 두 번 되묻는다. 예전에는 별도
+  // 화면에서 큰 동그라미 답안을 골랐지만, 지금은 질문도 로봇 말풍선이고 답안은
+  // 그 아래 알약 칩이다 (승아 결정).
+
+  QuestionBranch? _branch;
+  WhenOption? _when;
+  HowOption? _how;
+  String? _chipId;
+
+  /// 지금 답을 기다리는 중인가. 답하면(칩이든 직접 입력이든) 꺼진다.
+  bool _asking = false;
+
+  static String _flat(String label) => label.replaceAll('\n', ' ');
+
   @override
   void initState() {
     super.initState();
@@ -107,7 +125,131 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     _lastUserText = entry.text;
+
+    // 칩·음성은 상황이 한 줄뿐이라 바로 만들지 않고 되묻는다 (부록 D 결정).
+    if ((entry.fromChip || entry.fromVoice) && entry.video == null) {
+      await _startQuestions(entry);
+      return;
+    }
     await _send(text: entry.text ?? '', video: entry.video, chipId: entry.chipId);
+  }
+
+  // ---------------------------------------------------------------- 되묻기
+
+  Future<void> _startQuestions(ChatEntry entry) async {
+    final chat = context.read<ChatProvider>();
+    final branch = branchForChip(entry.chipId);
+
+    setState(() {
+      _branch = branch;
+      _chipId = entry.chipId;
+      _asking = true;
+    });
+
+    await chat.addUserMessage(text: entry.text);
+    if (!mounted) return;
+    await chat.addQuestion(
+      text: kStep1Question,
+      choices: [
+        for (final o in branch.whenOptions)
+          MessageChoice(id: o.id, label: _flat(o.label)),
+      ],
+    );
+    _scrollToEnd();
+  }
+
+  Future<void> _onChoice(MessageChoice choice) async {
+    final branch = _branch;
+    if (branch == null || !_asking) return;
+
+    if (_when == null) {
+      final option = branch.whenOptions.firstWhere(
+        (o) => o.id == choice.id,
+        orElse: () => branch.whenOptions.first,
+      );
+      await _answerWhen(option, choice.label);
+      return;
+    }
+
+    final option = branch.howOptions.firstWhere(
+      (o) => o.id == choice.id,
+      orElse: () => branch.howOptions.first,
+    );
+    setState(() => _how = option);
+    await context.read<ChatProvider>().addUserMessage(text: choice.label);
+    if (!mounted) return;
+    setState(() => _asking = false);
+    await _generate();
+  }
+
+  Future<void> _answerWhen(WhenOption option, String label) async {
+    final chat = context.read<ChatProvider>();
+    setState(() => _when = option);
+    await chat.addUserMessage(text: label);
+    if (!mounted) return;
+
+    await chat.addQuestion(
+      text: kStep2Question,
+      choices: [
+        for (final o in _branch!.howOptions)
+          MessageChoice(id: o.id, label: _flat(o.label)),
+      ],
+    );
+    _scrollToEnd();
+  }
+
+  /// 칩 대신 직접 적거나 말해서 답했다 — 남은 질문은 건너뛰고 바로 만든다.
+  Future<void> _answerFreely(String text) async {
+    await context.read<ChatProvider>().addUserMessage(text: text);
+    if (!mounted) return;
+    setState(() => _asking = false);
+    await _generate(extra: text);
+  }
+
+  /// 지금까지의 답을 한 문장으로. GPT 에는 이게 상황 설명이 된다.
+  String _promptText(String? extra) {
+    final first = _lastUserText?.trim();
+    return [
+      if (first != null && first.isNotEmpty) first,
+      if (_when != null) 'When: ${_flat(_when!.label)}',
+      if (_how != null) 'How: ${_how!.hint}',
+      if (extra != null && extra.trim().isNotEmpty) extra.trim(),
+    ].join('. ');
+  }
+
+  /// 되묻기가 끝난 뒤의 생성. 답을 그대로 실어 보낸다.
+  Future<void> _generate({String? extra}) async {
+    final chat = context.read<ChatProvider>();
+    final gen = context.read<GenerationProvider>();
+    final robot = context.read<RobotProvider>();
+
+    final pending = await chat.addPendingReply();
+    if (!mounted) return;
+    setState(() => _delayed = false);
+    _scrollToEnd();
+
+    final result = await gen.generate(
+      GenerationRequest(
+        signature: robot.signature,
+        text: _promptText(extra),
+        chipId: _chipId,
+        whenOptionId: _when?.id,
+        howOptionId: _how?.id,
+        situation: _when?.situation ?? _situationForChip(_chipId),
+      ),
+    );
+
+    if (!mounted) return;
+    if (result == null) {
+      if (gen.status == GenerationStatus.failed) await chat.failReply(pending.id);
+      return;
+    }
+
+    await chat.completeReply(pending.id, result.spec);
+    if (!mounted) return;
+    setState(() => _activeSpecId = result.spec.id);
+    _scrollToEnd();
+    await _play(result.spec, capture: true, messageId: pending.id);
   }
 
   void _onSimEvent(SimEvent e) {
@@ -293,7 +435,8 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       spec: spec,
       lastUserText: _lastUserText,
-      initialSituation: _situationForChip(widget.entry?.chipId),
+      // 되묻기 1단계 답이 있으면 그걸로 미리 채운다.
+      initialSituation: _when?.situation ?? _situationForChip(_chipId ?? widget.entry?.chipId),
     );
     if (request == null || !mounted) return;
 
@@ -337,6 +480,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onComposerSend(String text, VideoAttachment? video) {
+    // 되묻는 중이면 그게 곧 답이다 — 칩을 안 고르고 직접 적어도 된다.
+    if (_asking && video == null && text.trim().isNotEmpty) {
+      _answerFreely(text);
+      return;
+    }
+
     final hasReply = context.read<ChatProvider>().lastReply != null;
     if (hasReply && video == null && text.trim().isNotEmpty) {
       _sendFeedback(text);
@@ -409,8 +558,27 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// 답안 칩을 마지막 질문에만 붙이려고 쓴다.
+  String? get messagesLastId {
+    final list = context.read<ChatProvider>().messages;
+    return list.isEmpty ? null : list.last.id;
+  }
+
   Widget _buildMessage(Message m) {
     if (m.sender == Sender.user) return _UserBubble(message: m);
+
+    // 되묻는 메시지. 답안 칩은 **아직 답하지 않은 마지막 질문**에만 붙는다.
+    if (m.isQuestion) {
+      final live = _asking && messagesLastId == m.id;
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: _QuestionBubble(
+          text: m.text ?? '',
+          choices: live ? m.choices : const [],
+          onChoice: _onChoice,
+        ),
+      );
+    }
 
     // 로봇 쪽은 전부 왼쪽 정렬이다 (시안 `Chat`).
     final Widget bubble;
@@ -437,6 +605,42 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     return Align(alignment: Alignment.centerLeft, child: bubble);
   }
+}
+
+/// 로봇이 되묻는 말풍선 + 그 아래 추천 답안.
+///
+/// 말풍선은 시안 `Chat Bubble / Robot Text`, 답안은 홈과 같은 `Chip` (높이 43,
+/// 좌우 16, radius full). 예전 06-9 의 큰 동그라미 버튼을 대신한다.
+class _QuestionBubble extends StatelessWidget {
+  const _QuestionBubble({
+    required this.text,
+    required this.choices,
+    required this.onChoice,
+  });
+
+  final String text;
+  final List<MessageChoice> choices;
+  final ValueChanged<MessageChoice> onChoice;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      RobotTextBubble(text: text),
+      if (choices.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 11,
+          children: [
+            for (final c in choices)
+              PureChip(label: c.label, onTap: () => onChoice(c)),
+          ],
+        ),
+      ],
+    ],
+  );
 }
 
 /// 홈에서 보던 인사말이 채팅 맨 위에 그대로 이어진다 (시안 06-E1 `480:3015`).

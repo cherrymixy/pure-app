@@ -42,7 +42,27 @@ class VideoAttachment {
       );
 }
 
-/// 채팅 메시지 하나. 질문형(06-9)의 답과 초안도 여기에 기록된다.
+/// 로봇이 되물을 때 함께 내려 주는 추천 답안 하나.
+///
+/// 질문형(06-9)이 별도 화면에서 채팅 안으로 들어오면서 생겼다 — 질문은 로봇
+/// 말풍선이고, 답안은 그 아래 알약 칩으로 붙는다.
+class MessageChoice {
+  const MessageChoice({required this.id, required this.label});
+
+  /// 질문 트리의 `WhenOption` / `HowOption` id. 생성 요청에 그대로 실린다.
+  final String id;
+
+  final String label;
+
+  Map<String, Object?> toJson() => {'id': id, 'label': label};
+
+  factory MessageChoice.fromJson(Map<String, Object?> json) => MessageChoice(
+        id: json['id'] as String? ?? '',
+        label: json['label'] as String? ?? '',
+      );
+}
+
+/// 채팅 메시지 하나. 질문형(06-9)의 질문·답과 초안도 여기에 기록된다.
 class Message {
   const Message({
     required this.id,
@@ -52,6 +72,7 @@ class Message {
     this.text,
     this.video,
     this.spec,
+    this.choices = const [],
   });
 
   final String id;
@@ -63,13 +84,20 @@ class Message {
   /// 로봇 답장이면 생성된 모션.
   final MotionSpec? spec;
 
+  /// 되묻는 메시지면 추천 답안. 이미 답한 질문이면 화면에서 칩을 감춘다.
+  final List<MessageChoice> choices;
+
   final DateTime createdAt;
+
+  /// 모션 없이 말만 하는 메시지인가 (질문·안내).
+  bool get isQuestion => choices.isNotEmpty;
 
   Message copyWith({
     String? text,
     MessageStatus? status,
     MotionSpec? spec,
     VideoAttachment? video,
+    List<MessageChoice>? choices,
   }) =>
       Message(
         id: id,
@@ -78,6 +106,7 @@ class Message {
         video: video ?? this.video,
         status: status ?? this.status,
         spec: spec ?? this.spec,
+        choices: choices ?? this.choices,
         createdAt: createdAt,
       );
 
@@ -88,6 +117,9 @@ class Message {
         'video': ?video?.toJson(),
         'status': status.name,
         'spec': ?spec?.toJson(),
+        'choices': ?(choices.isEmpty
+            ? null
+            : choices.map((c) => c.toJson()).toList()),
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -104,6 +136,10 @@ class Message {
         spec: json['spec'] == null
             ? null
             : MotionSpec.fromJson((json['spec'] as Map).cast<String, Object?>()),
+        choices: ((json['choices'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((e) => MessageChoice.fromJson(e.cast<String, Object?>()))
+            .toList(),
         createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime(2026),
       );
 }

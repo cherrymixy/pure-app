@@ -86,20 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
       text: text,
       video: video,
       chipId: stillChip ? chip.id : null,
+      fromVoice: fromVoice,
     );
 
     /*
-     * 갈림길 (부록 D 결정):
-     *  - 칩 · 음성 → 질문형(06-9). 상황을 좁혀 가며 묻는다.
-     *  - 텍스트 · 영상 → 채팅(06-2~06-5). 바로 만든다.
-     * 둘은 같은 Chat 위에 올라가므로 기록은 한 곳에 남는다.
+     * 전부 채팅으로 간다 (승아 결정). 칩·음성은 상황이 한 줄뿐이라 채팅 안에서
+     * 로봇이 두 번 되묻고, 텍스트·영상은 바로 만든다 (부록 D 의 갈림길은
+     * 그대로지만 화면이 갈리지 않는다).
      */
-    final toQuestion = (stillChip || fromVoice) && video == null;
-    Navigator.pushNamed(
-      context,
-      toQuestion ? AppRoutes.question : AppRoutes.chat,
-      arguments: entry,
-    );
+    Navigator.pushNamed(context, AppRoutes.chat, arguments: entry);
   }
 
   @override
@@ -209,15 +204,23 @@ class _HomeChips extends StatelessWidget {
   }
 }
 
-/// 홈에서 채팅/질문형으로 넘길 때 들고 가는 것.
+/// 홈에서 채팅으로 넘길 때 들고 가는 것.
 class ChatEntry {
-  const ChatEntry({this.text, this.video, this.chipId});
+  const ChatEntry({
+    this.text,
+    this.video,
+    this.chipId,
+    this.fromVoice = false,
+  });
 
   final String? text;
   final VideoAttachment? video;
 
-  /// 칩에서 왔으면 그 id. 질문형으로 갈지 판단하는 데 쓴다 (부록 D 결정).
+  /// 칩에서 왔으면 그 id. 되물을지 판단하고 질문 가지를 고르는 데 쓴다 (부록 D).
   final String? chipId;
+
+  /// 음성으로 들어왔는가. 칩과 마찬가지로 상황이 한 줄뿐이라 되묻는다.
+  final bool fromVoice;
 
   bool get fromChip => chipId != null;
 }
