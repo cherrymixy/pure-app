@@ -46,6 +46,8 @@ class LibraryProvider extends ChangeNotifier {
   // ---------------------------------------------------------------- 조회
 
   List<SavedMotion> get all => _repo.library;
+  /// 저장소가 통째로 바뀐 뒤(전시 데이터 초기화) 화면을 다시 그리게 한다.
+  void refresh() => notifyListeners();
 
   LibraryFilter get filter {
     final raw = _repo.setting<String>(SettingKeys.libraryFilter);

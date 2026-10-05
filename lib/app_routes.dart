@@ -4,12 +4,13 @@ import 'models/motion_spec.dart';
 import 'screens/chat_history_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/placeholder_screen.dart';
 import 'screens/preview_screen.dart';
 import 'screens/question_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/library_search_screen.dart';
+import 'screens/me_screen.dart';
 import 'screens/motion_detail_screen.dart';
+import 'screens/robot_screen.dart';
 import 'screens/signature_screen.dart';
 import 'screens/sim_debug_screen.dart';
 import 'screens/splash_screen.dart';
@@ -31,7 +32,14 @@ abstract final class AppRoutes {
   static const motionDetail = '/library/motion';
   static const robot = '/robot';
   static const robotActivity = '/robot/activity';
+  static const robotList = '/robot/list';
+  static const firmware = '/robot/firmware';
+  static const signatureReset = '/robot/signature';
   static const me = '/me';
+  static const meNotifications = '/me/notifications';
+  static const meAccount = '/me/account';
+  static const meHelp = '/me/help';
+  static const meTerms = '/me/terms';
   static const notifications = '/notifications';
 
   /// 브리지 확인용 임시 화면. 슬라이스가 다 끝나면 지운다.
@@ -88,13 +96,27 @@ abstract final class AppRoutes {
       case motionDetail:
         page = MotionDetailScreen(motionId: settings.arguments! as String);
       case robot:
-        page = const PlaceholderScreen(title: 'Robot', slice: '슬라이스 ⑥');
+        page = const RobotScreen();
       case robotActivity:
-        page = const PlaceholderScreen(title: 'Activity history', slice: '슬라이스 ⑥');
+        page = const ActivityScreen();
+      case robotList:
+        page = const RobotListScreen();
+      case firmware:
+        page = const FirmwareScreen();
+      case signatureReset:
+        page = const SignatureResetScreen();
       case me:
-        page = const PlaceholderScreen(title: 'Me', slice: '슬라이스 ⑥');
+        page = const MeScreen();
+      case meNotifications:
+        page = const MeNotificationsScreen();
+      case meAccount:
+        page = const MeAccountScreen();
+      case meHelp:
+        page = const MeHelpScreen();
+      case meTerms:
+        page = const MeTermsScreen();
       case notifications:
-        page = const PlaceholderScreen(title: 'Notifications', slice: '슬라이스 ⑥');
+        page = const NotificationsScreen();
       case debug:
         page = const SimDebugScreen();
       default:

@@ -10,6 +10,8 @@ class NotificationProvider extends ChangeNotifier {
   final DataRepository _repo;
 
   List<NotificationItem> get items => _repo.notifications;
+  /// 저장소가 통째로 바뀐 뒤(전시 데이터 초기화) 화면을 다시 그리게 한다.
+  void refresh() => notifyListeners();
 
   /// 상단 종에 점을 띄울지.
   bool get hasUnread => items.any((n) => !n.read);

@@ -15,6 +15,8 @@ class RobotProvider extends ChangeNotifier {
   final DataRepository _repo;
 
   Robot get robot => _repo.robot;
+  /// 저장소가 통째로 바뀐 뒤(전시 데이터 초기화) 화면을 다시 그리게 한다.
+  void refresh() => notifyListeners();
   MotionSignature get signature => robot.signature;
 
   /// 05 를 한 번이라도 마쳤는가. 첫 실행 분기에 쓴다.

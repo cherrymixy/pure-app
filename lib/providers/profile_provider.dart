@@ -10,6 +10,8 @@ class ProfileProvider extends ChangeNotifier {
   final DataRepository _repo;
 
   UserProfile get profile => _repo.profile;
+  /// 저장소가 통째로 바뀐 뒤(전시 데이터 초기화) 화면을 다시 그리게 한다.
+  void refresh() => notifyListeners();
   String get name => profile.name;
   String get email => profile.email;
 
