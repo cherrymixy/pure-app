@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app_routes.dart';
 import '../data/chips.dart';
 import '../data/strings.dart';
 import '../models/message.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _text = TextEditingController();
   final _composerKey = GlobalKey<ComposerState>();
   String? _pendingChipId;
+  bool _fromVoice = false;
 
   @override
   void initState() {
@@ -46,19 +48,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onChipTap(HomeChip chip) {
     _pendingChipId = chip.id;
+    _fromVoice = false;
     _composerKey.currentState?.fill(chip.label);
   }
 
   void _onSend(String text, VideoAttachment? video) {
-    final chipId = _pendingChipId;
-    _pendingChipId = null;
+    // 칩을 탭한 뒤 문장을 고쳤으면 더 이상 칩이 아니다.
+    final chip = _pendingChipId == null ? null : chipById(_pendingChipId!);
+    final stillChip = chip != null && chip.label == text.trim();
+    final fromVoice = _fromVoice;
 
-    // 슬라이스 ② 에서 채팅 화면이, ③ 에서 질문형이 붙는다.
-    // 지금은 어디로 갈지만 정해 두고 결과를 알린다.
+    _pendingChipId = null;
+    _fromVoice = false;
+
+    final entry = ChatEntry(
+      text: text,
+      video: video,
+      chipId: stillChip ? chip.id : null,
+    );
+
+    /*
+     * 갈림길 (부록 D 결정):
+     *  - 칩 · 음성 → 질문형(06-9). 상황을 좁혀 가며 묻는다.
+     *  - 텍스트 · 영상 → 채팅(06-2~06-5). 바로 만든다.
+     * 둘은 같은 Chat 위에 올라가므로 기록은 한 곳에 남는다.
+     */
+    final toQuestion = (stillChip || fromVoice) && video == null;
     Navigator.pushNamed(
       context,
-      '/chat',
-      arguments: ChatEntry(text: text, video: video, chipId: chipId),
+      toQuestion ? AppRoutes.question : AppRoutes.chat,
+      arguments: entry,
     );
   }
 
@@ -71,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _composerKey,
         controller: _text,
         onSend: _onSend,
+        onVoiceResult: (_) => _fromVoice = true,
       ),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),

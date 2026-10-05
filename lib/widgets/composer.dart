@@ -18,6 +18,7 @@ class Composer extends StatefulWidget {
     required this.controller,
     required this.onSend,
     this.enabled = true,
+    this.onVoiceResult,
   });
 
   final TextEditingController controller;
@@ -26,6 +27,10 @@ class Composer extends StatefulWidget {
   final void Function(String text, VideoAttachment? video) onSend;
 
   final bool enabled;
+
+  /// 음성 인식으로 입력창이 채워졌을 때. 질문형으로 갈지 판단하는 데 쓴다
+  /// (부록 D: 칩·음성 → 질문형, 텍스트·영상 → 채팅).
+  final ValueChanged<String>? onVoiceResult;
 
   @override
   State<Composer> createState() => ComposerState();
@@ -185,7 +190,9 @@ class ComposerState extends State<Composer> {
     final ok = await voice.start(
       consumer: VoiceConsumer.composer,
       onFinal: (text) {
-        if (mounted) fill(text);
+        if (!mounted) return;
+        fill(text);
+        widget.onVoiceResult?.call(text);
       },
     );
     if (!mounted || ok) return;
