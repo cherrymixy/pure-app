@@ -78,3 +78,6 @@
 | 2026-10-06 | 10-④ | 편집 모드(08-2 진입): 진행 바·Skip 숨김, **현재 답을 체크로 강조**, 고르면 즉시 저장하고 인사 1회 재생 후 복귀. 스플래시의 첫 실행 분기도 복구했다(온보딩 안 했으면 05 먼저). |
 | 2026-10-04 | 10-④ | "A bit softer" 는 시그니처를 바꾸지 않는다 — 한 단계 부드러운 인사를 **보여 주기만** 한다. 관계 방식은 인사 앞에 동작을 하나 붙인다(comesFirst→focus, onlyNeeded→nod, waitsNear→없음, PRD §6-9). |
 | 2026-10-06 | 10-④ | **버그 발견·수정**: `late MotionSignature _draft` 를 첫 프레임 뒤 콜백에서 초기화해서, 화면이 그보다 먼저 그려지며 `LateInitializationError` 로 빨간 화면이 떴다. Provider 는 initState 에서 읽을 수 없으므로 시드 값으로 시작하고 곧바로 덮어쓴다. 시뮬레이터 스크린샷이 잡았다 — 정적 분석·단위 테스트로는 안 걸린다. |
+| 2026-10-06 | 10-⑤ | 라이브러리. `screens/library_screen.dart`(필터 All/Auto/Manual·자동 그룹·카드), `motion_detail_screen.dart`(미리보기·정보·재생·Edit in chat·Rename/Delete), `library_search_screen.dart`(즉시 포커스·이름/상황 검색·일치 글자 강조·결과 수). 카드의 재생 버튼을 누르면 **그 카드 자리에서** 시뮬레이터가 돈다(SimSlot priority 1). |
+| 2026-10-06 | 10-⑤ | **버그 발견·수정 — 반응 종류 3가지를 2가지로만 표시했다.** 같은 상황에 새 모션을 저장하면 기존 것이 `askFirst` 로 내려가는데, 화면이 auto 가 아니면 전부 "Only when I ask" 로 보여 줘서 **밀려난 모션이 수동 모션처럼 보였다**(상황 연결이 끊긴 줄 안다). `reactionLabel`/`reactionDetail` 로 셋을 구분하고 테스트로 고정. 실제 라이브러리 화면 스크린샷에서 발견. |
+| 2026-10-06 | 10-⑤ | 개발용 `START_ROUTE` dart-define 추가. `initialRoute` 에 경로를 넣으면 Flutter 가 `/` 부터 스택을 쌓아 스플래시가 먼저 뜨고 타이머가 홈으로 보내 버린다 — `onGenerateInitialRoutes` 로 스택을 직접 만든다. 화면을 바로 열어 스크린샷으로 확인할 수 있어 남은 슬라이스와 디자인 패스에서 계속 쓴다. 전시 빌드에서는 비어 있다. |

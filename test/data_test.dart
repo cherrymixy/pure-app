@@ -200,6 +200,30 @@ void main() {
           'Plays automatically when someone comes home');
     });
 
+    test('반응 종류 3가지가 서로 다르게 표시된다', () {
+      // 밀려난 모션(askFirst)이 수동 모션처럼 보이면, 사용자는 상황 연결이
+      // 끊긴 줄 안다. 실제 라이브러리 화면에서 그렇게 보여서 고쳤다.
+      final auto = reactionLabel(ReactionKind.auto, Situation.comesHome);
+      final ask = reactionLabel(ReactionKind.askFirst, Situation.comesHome);
+      final manual = reactionLabel(ReactionKind.manual, Situation.onlyWhenAsked);
+
+      expect({auto, ask, manual}, hasLength(3), reason: '셋이 모두 달라야 한다');
+      expect(auto, 'Someone comes home');
+      expect(ask, contains('Asks before playing'));
+      expect(ask, contains('someone comes home'));
+      expect(manual, 'Only when I ask');
+
+      // 상세 문구도 마찬가지.
+      expect(
+        {
+          reactionDetail(ReactionKind.auto, Situation.tired),
+          reactionDetail(ReactionKind.askFirst, Situation.tired),
+          reactionDetail(ReactionKind.manual, null),
+        },
+        hasLength(3),
+      );
+    });
+
     test('칩 5개, id 중복 없음', () {
       expect(kHomeChips, hasLength(5));
       expect(kHomeChips.map((c) => c.id).toSet(), hasLength(5));

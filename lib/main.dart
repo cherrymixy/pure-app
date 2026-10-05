@@ -63,8 +63,11 @@ class PureApp extends StatelessWidget {
         builder: (context) => MaterialApp(
           title: 'PURE',
           debugShowCheckedModeBanner: false,
-          initialRoute: AppRoutes.splash,
           onGenerateRoute: AppRoutes.onGenerateRoute,
+          // 개발 중 특정 화면을 바로 열어 확인하기 위한 통로.
+          //   ./scripts/dev.sh install --dart-define=START_ROUTE=/library
+          // 전시 빌드에서는 비어 있어 항상 스플래시로 시작한다.
+          onGenerateInitialRoutes: AppRoutes.initialRoutes,
           builder: (context, child) {
             // 시뮬레이터 WebView 는 앱에 하나뿐이고 화면 위를 떠다닌다.
             // 스플래시가 떠 있는 동안 뒤에서 wasm 을 올린다.

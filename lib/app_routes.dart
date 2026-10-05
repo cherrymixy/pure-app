@@ -7,6 +7,9 @@ import 'screens/home_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'screens/preview_screen.dart';
 import 'screens/question_screen.dart';
+import 'screens/library_screen.dart';
+import 'screens/library_search_screen.dart';
+import 'screens/motion_detail_screen.dart';
 import 'screens/signature_screen.dart';
 import 'screens/sim_debug_screen.dart';
 import 'screens/splash_screen.dart';
@@ -24,6 +27,8 @@ abstract final class AppRoutes {
   static const question = '/question';
   static const signature = '/signature';
   static const library = '/library';
+  static const librarySearch = '/library/search';
+  static const motionDetail = '/library/motion';
   static const robot = '/robot';
   static const robotActivity = '/robot/activity';
   static const me = '/me';
@@ -31,6 +36,23 @@ abstract final class AppRoutes {
 
   /// 브리지 확인용 임시 화면. 슬라이스가 다 끝나면 지운다.
   static const debug = '/debug';
+
+  /// 개발용 시작 화면. `--dart-define=START_ROUTE=/library` 로 지정한다.
+  ///
+  /// `initialRoute` 에 경로를 넣으면 Flutter 가 `/` 부터 스택을 쌓아 스플래시가
+  /// 먼저 뜨고 그 타이머가 홈으로 보내 버린다. 그래서 스택을 직접 만든다.
+  static const String _startRoute = String.fromEnvironment('START_ROUTE');
+
+  static List<Route<dynamic>> initialRoutes(String _) {
+    if (_startRoute.isEmpty || _startRoute == splash) {
+      return [onGenerateRoute(const RouteSettings(name: splash))!];
+    }
+    return [
+      // 뒤로가기로 돌아갈 자리를 하나 깔아 둔다.
+      onGenerateRoute(const RouteSettings(name: home))!,
+      if (onGenerateRoute(RouteSettings(name: _startRoute)) case final r?) r,
+    ];
+  }
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     Widget page;
@@ -60,7 +82,11 @@ abstract final class AppRoutes {
           args: (settings.arguments as SignatureArgs?) ?? const SignatureArgs(),
         );
       case library:
-        page = const PlaceholderScreen(title: 'Library', slice: '슬라이스 ⑤');
+        page = const LibraryScreen();
+      case librarySearch:
+        page = const LibrarySearchScreen();
+      case motionDetail:
+        page = MotionDetailScreen(motionId: settings.arguments! as String);
       case robot:
         page = const PlaceholderScreen(title: 'Robot', slice: '슬라이스 ⑥');
       case robotActivity:

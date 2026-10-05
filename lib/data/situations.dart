@@ -28,5 +28,27 @@ String situationLabel(Situation s) => kSituationLabels[s] ?? '';
 String playsAutomaticallyWhen(Situation s) =>
     isAutoSituation(s) ? 'Plays automatically when ${_lower(situationLabel(s))}' : 'Only when I ask';
 
+/// 카드·상세에 보여 줄 한 줄.
+///
+/// 종류가 셋인데 둘로만 표시하면 **밀려난 모션이 수동 모션처럼 보인다** —
+/// 같은 상황에 새 모션을 저장하면 기존 것은 지워지지 않고 askFirst 로 내려가는데,
+/// 그 상태가 "Only when I ask" 로 나오면 사용자는 상황 연결이 끊긴 줄 안다.
+String reactionLabel(ReactionKind kind, Situation? situation) => switch (kind) {
+      ReactionKind.auto when situation != null => situationLabel(situation),
+      ReactionKind.auto => '',
+      ReactionKind.askFirst when situation != null =>
+        'Asks before playing · ${_lower(situationLabel(situation))}',
+      ReactionKind.askFirst => 'Asks before playing',
+      ReactionKind.manual => 'Only when I ask',
+    };
+
+/// 상세 화면의 긴 문구.
+String reactionDetail(ReactionKind kind, Situation? situation) => switch (kind) {
+      ReactionKind.auto when situation != null => playsAutomaticallyWhen(situation),
+      ReactionKind.askFirst when situation != null =>
+        'Asks before playing when ${_lower(situationLabel(situation))}',
+      ReactionKind.manual || _ => 'Only when I ask',
+    };
+
 String _lower(String label) =>
     label.isEmpty ? label : label[0].toLowerCase() + label.substring(1);
