@@ -18,10 +18,10 @@ const DISPLAY: Record<JointName, string> = {
 };
 
 const robot = ROBOTS['pure-desk'];
-const AMPS = [1.0, 1.5];
+const AMPS = (process.env.AMPS ?? '1.0,1.5').split(',').map(Number);
 
 for (const amp of AMPS) {
-  console.log(`\n===== amplitude ${amp.toFixed(1)} =====`);
+  console.log(`\n===== amplitude ${amp.toFixed(2)} =====`);
   let anyViolation = false;
   for (const motion of BEHAVIORS) {
     const rt = retargetMotion(robot, motion);
