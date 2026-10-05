@@ -233,7 +233,11 @@ class _ActionChip extends StatelessWidget {
   }
 }
 
-/// `Chat Bubble / Robot Text` — 흰 말풍선, 왼쪽 정렬.
+/// `Chat Bubble / Robot Text` — 왼쪽 정렬.
+///
+/// 시안은 이 변형도 흰색이지만 **검정으로 쓴다**(승아 결정). 흰 말풍선이 내 말,
+/// 추천 답안 칩까지 전부 흰 알약이라 셋이 구분되지 않았다. 로봇이 말하는 것은
+/// 시뮬레이션·타이핑과 똑같이 `neutral/900` 으로 묶는다.
 class RobotTextBubble extends StatelessWidget {
   const RobotTextBubble({super.key, required this.text});
   final String text;
@@ -242,10 +246,13 @@ class RobotTextBubble extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.bgSurface,
+          color: AppColors.neutral900,
           borderRadius: BorderRadius.circular(_bubbleRadius),
         ),
-        child: Text(text, style: AppTextStyles.bodyL),
+        child: Text(
+          text,
+          style: AppTextStyles.bodyL.copyWith(color: AppColors.textOnInverse),
+        ),
       );
 }
 

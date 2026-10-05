@@ -40,6 +40,10 @@ class _HomeScreenState extends State<HomeScreen> {
   ///   ./scripts/dev.sh install --dart-define=OPEN_DRAWER=true
   static const bool _openDrawerOnStart = bool.fromEnvironment('OPEN_DRAWER');
 
+  /// 개발용 — 칩을 누른 것처럼 바로 채팅(되묻기)으로 들어간다.
+  ///   ./scripts/dev.sh install --dart-define=START_CHIP=cameHome
+  static const String _startChip = String.fromEnvironment('START_CHIP');
+
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _text = TextEditingController();
   final _composerKey = GlobalKey<ComposerState>();
@@ -57,6 +61,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_openDrawerOnStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _scaffoldKey.currentState?.openDrawer();
+      });
+    }
+    if (_startChip.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final chip = chipById(_startChip);
+        if (!mounted || chip == null) return;
+        Navigator.pushNamed(
+          context,
+          AppRoutes.chat,
+          arguments: ChatEntry(text: chip.label, chipId: chip.id),
+        );
       });
     }
   }
