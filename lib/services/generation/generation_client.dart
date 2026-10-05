@@ -92,6 +92,9 @@ enum GenerationFailure {
   /// 키가 없거나 거부당했다.
   auth,
 
+  /// 크레딧이 없거나 사용량 한도를 넘었다. 재시도해도 소용없다.
+  quota,
+
   /// 응답이 왔는데 쓸 수 있는 게 없었다.
   invalidResponse,
 

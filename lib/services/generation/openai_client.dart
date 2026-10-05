@@ -85,7 +85,22 @@ class OpenAIClient implements GenerationClient {
         if (res.statusCode == 401 || res.statusCode == 403) {
           throw GenerationException(GenerationFailure.auth, 'HTTP ${res.statusCode}');
         }
-        if (res.statusCode >= 500 || res.statusCode == 429) {
+        if (res.statusCode == 429) {
+          /*
+           * 429 는 두 가지가 섞여 있다.
+           *  - insufficient_quota : 크레딧이 없다. 7초를 기다려도 안 생긴다.
+           *  - rate limit         : 잠깐 몰렸다. 기다리면 된다.
+           * 구분하지 않으면 잔액이 떨어졌을 때 매번 7초를 버리고 데모로 간다 —
+           * 시연에서는 그 7초가 길다.
+           */
+          if (_isQuotaExhausted(res.body)) {
+            throw GenerationException(
+              GenerationFailure.quota,
+              _quotaMessage(res.body),
+            );
+          }
+          lastError = GenerationException(GenerationFailure.network, 'HTTP 429 (rate limit)');
+        } else if (res.statusCode >= 500) {
           // 서버 쪽 문제 — 재시도할 값어치가 있다.
           lastError = GenerationException(
             GenerationFailure.network,
@@ -116,6 +131,29 @@ class OpenAIClient implements GenerationClient {
   }
 
   static String _short(String s) => s.length > 200 ? '${s.substring(0, 200)}…' : s;
+
+  /// 429 본문이 "크레딧 없음"인가.
+  static bool _isQuotaExhausted(String body) {
+    final error = _errorObject(body);
+    final code = error?['code']?.toString() ?? '';
+    final type = error?['type']?.toString() ?? '';
+    return code == 'insufficient_quota' ||
+        code == 'credit_balance_exhausted' ||
+        type == 'insufficient_quota';
+  }
+
+  static String _quotaMessage(String body) =>
+      _errorObject(body)?['message']?.toString() ?? '크레딧이 없습니다';
+
+  static Map<String, Object?>? _errorObject(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map && decoded['error'] is Map) {
+        return (decoded['error']! as Map).cast<String, Object?>();
+      }
+    } catch (_) {}
+    return null;
+  }
 
   // ---------------------------------------------------------------- 요청 본문
 

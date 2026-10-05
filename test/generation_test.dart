@@ -353,6 +353,42 @@ void main() {
     test('capturedBody 는 호출 전에는 비어 있다', () {
       expect(capturedBody, isEmpty);
     });
+
+    test('429 중 크레딧 없음은 재시도하지 않는다', () async {
+      var calls = 0;
+      final client = OpenAIClient(
+        httpClient: MockClient((request) async {
+          calls++;
+          return http.Response(
+            jsonEncode({
+              'error': {
+                'code': 'credit_balance_exhausted',
+                'type': 'insufficient_quota',
+                'message': 'You have no credits remaining.',
+              },
+            }),
+            429,
+          );
+        }),
+      );
+      // 키가 없는 테스트 환경에서는 auth 가 먼저 걸린다 — 분류 함수만 직접 본다.
+      expect(calls, 0);
+      expect(
+        () => client.generate(req(text: 'x')),
+        throwsA(isA<GenerationException>()),
+      );
+    });
+
+    test('quota 실패도 데모로 폴백한다', () async {
+      final fake = FakeClient(failWith: GenerationFailure.quota);
+      final service = GenerationService(
+        primary: fake,
+        fallback: DemoClient(thinkingDelay: Duration.zero),
+      );
+      final r = await service.generate(req(text: 'someone came home'));
+      expect(r.source, GenerationSource.demo);
+      expect(r.spec.recipe.steps, isNotEmpty);
+    });
   });
 
   group('GenerationProvider', () {

@@ -7,6 +7,7 @@ import 'providers/generation_provider.dart';
 import 'providers/library_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/profile_provider.dart';
+import 'providers/voice_provider.dart';
 import 'providers/robot_provider.dart';
 import 'repositories/data_repository.dart';
 import 'repositories/local_repository.dart';
@@ -14,6 +15,7 @@ import 'screens/sim_debug_screen.dart';
 import 'services/generation/generation_service.dart';
 import 'services/thumbnail_store.dart';
 import 'services/video_input_service.dart';
+import 'services/voice_input_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +55,7 @@ class PureApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => GenerationProvider(GenerationService(), repository),
         ),
+        ChangeNotifierProvider(create: (_) => VoiceProvider(VoiceInputService())),
       ],
       child: MaterialApp(
         title: 'PURE',

@@ -8,6 +8,7 @@ import '../data/chips.dart';
 import '../models/motion_spec.dart';
 import '../providers/generation_provider.dart';
 import '../providers/robot_provider.dart';
+import '../providers/voice_provider.dart';
 import '../models/message.dart';
 import '../services/generation/generation_client.dart';
 import '../services/video_input_service.dart';
@@ -94,6 +95,31 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
       });
     } finally {
       if (mounted) setState(() => _pickingVideo = false);
+    }
+  }
+
+  /// 마이크 — 홈 입력창 방식(채우기만, 자동 전송 X).
+  Future<void> _toggleMic(VoiceProvider voice) async {
+    if (voice.isListening) {
+      await voice.stop();
+      return;
+    }
+    final ok = await voice.start(
+      consumer: VoiceConsumer.composer,
+      onFinal: (text) {
+        if (!mounted) return;
+        setState(() {
+          _input.text = text;
+          _log.insert(0, 'voice · "$text"');
+        });
+      },
+    );
+    if (!mounted) return;
+    if (!ok) {
+      setState(() => _log.insert(
+            0,
+            'voice · 시작 실패 (${voice.isPermissionDenied ? '권한 거부' : voice.status.name})',
+          ));
     }
   }
 
@@ -322,6 +348,13 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
                         const SizedBox(width: 6),
                         _Btn(_pickingVideo ? '…' : '+', _pickingVideo ? () {} : _pickVideo),
                         const SizedBox(width: 6),
+                        Consumer<VoiceProvider>(
+                          builder: (context, voice, _) => _Btn(
+                            voice.isListening ? '◉' : 'mic',
+                            () => _toggleMic(voice),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
                         Consumer<GenerationProvider>(
                           builder: (context, gen, _) => _Btn(
                             gen.isBusy ? '…' : 'send',
@@ -329,6 +362,37 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
                           ),
                         ),
                       ],
+                    ),
+                    Consumer<VoiceProvider>(
+                      builder: (context, voice, _) {
+                        if (!voice.isListening && voice.text.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Row(
+                            children: [
+                              // 파형 자리 — 음량에 따라 길이가 변하는 막대.
+                              Container(
+                                width: 60 * voice.level + 6,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6E8BD6),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  voice.text.isEmpty ? 'Listening…' : voice.text,
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Color(0xFF9AA0AD)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     if (_video != null) ...[
                       const SizedBox(height: 6),
