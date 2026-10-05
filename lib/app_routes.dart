@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'models/motion_spec.dart';
+import 'screens/chat_history_screen.dart';
+import 'screens/chat_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/placeholder_screen.dart';
+import 'screens/preview_screen.dart';
 import 'screens/sim_debug_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -14,6 +18,7 @@ abstract final class AppRoutes {
   static const homeNew = '/home/new';
   static const chat = '/chat';
   static const chats = '/chats';
+  static const preview = '/preview';
   static const signature = '/signature';
   static const library = '/library';
   static const robot = '/robot';
@@ -34,9 +39,17 @@ abstract final class AppRoutes {
       case homeNew:
         page = const HomeScreen(startNewChat: true);
       case chat:
-        page = const PlaceholderScreen(title: 'Chat', slice: '슬라이스 ②');
+        page = ChatScreen(entry: settings.arguments as ChatEntry?);
       case chats:
-        page = const PlaceholderScreen(title: 'Recent chats', slice: '슬라이스 ②');
+        page = const ChatHistoryScreen();
+      case preview:
+        return PageRouteBuilder<void>(
+          settings: settings,
+          opaque: false,
+          transitionDuration: const Duration(milliseconds: 220),
+          pageBuilder: (_, _, _) =>
+              PreviewScreen(spec: settings.arguments! as MotionSpec),
+        );
       case signature:
         page = const PlaceholderScreen(title: 'Motion signature', slice: '슬라이스 ④');
       case library:
