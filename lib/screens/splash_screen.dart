@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app_routes.dart';
+import '../providers/robot_provider.dart';
 import '../data/strings.dart';
 import '../widgets/gray_box.dart';
 
@@ -29,8 +31,12 @@ class _SplashScreenState extends State<SplashScreen> {
   void _go() {
     if (!mounted) return;
     // 첫 실행이면 05 모션 시그니처를 먼저 보여 준다 (부록 D 결정).
-    // 그 화면은 슬라이스 ④ 에서 만든다 — 그전까지는 홈으로 바로 간다.
-    Navigator.pushReplacementNamed(context, AppRoutes.home);
+    // "Reset demo data" 가 이 플래그도 지우므로 다음 관람객에게 다시 보여 줄 수 있다.
+    final onboarded = context.read<RobotProvider>().onboarded;
+    Navigator.pushReplacementNamed(
+      context,
+      onboarded ? AppRoutes.home : AppRoutes.signature,
+    );
   }
 
   @override

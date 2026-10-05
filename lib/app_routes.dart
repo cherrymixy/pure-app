@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'screens/preview_screen.dart';
 import 'screens/question_screen.dart';
+import 'screens/signature_screen.dart';
 import 'screens/sim_debug_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -55,7 +56,9 @@ abstract final class AppRoutes {
               PreviewScreen(spec: settings.arguments! as MotionSpec),
         );
       case signature:
-        page = const PlaceholderScreen(title: 'Motion signature', slice: '슬라이스 ④');
+        page = SignatureScreen(
+          args: (settings.arguments as SignatureArgs?) ?? const SignatureArgs(),
+        );
       case library:
         page = const PlaceholderScreen(title: 'Library', slice: '슬라이스 ⑤');
       case robot:
