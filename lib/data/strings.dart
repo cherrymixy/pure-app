@@ -40,7 +40,12 @@ abstract final class S {
   // ---------------------------------------------------------------- 06 홈
   /// `{name}` 자리에 프로필 이름이 들어간다.
   static const homeGreeting = 'Hi {name}, what’s happening?';
-  static const homeInputHint = 'Tell Purebot what happened…';
+
+  /// 시안은 인사말을 두 줄로 끊어 놓았다 — 이름이 길어도 리듬이 유지된다.
+  static const homeGreetingLine1 = 'Hi {name},';
+  static const homeGreetingLine2 = 'what’s happening?';
+  /// 시안 06-1 의 플레이스홀더 문구.
+  static const homeInputHint = 'Say or type…';
   static const homeDemoModeOn = 'Demo mode on';
   static const homeDemoModeOff = 'Demo mode off';
 

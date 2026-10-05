@@ -87,4 +87,11 @@ abstract final class AppTextStyles {
   /// 11 / 14 Regular — 섹션 라벨·시각.
   static TextStyle get caption =>
       _base(size: 11, height: 14, weight: FontWeight.w400);
+
+  // ---- 화면 전용 ----
+
+  /// 홈 인사말. 시안(`480:2043`)이 토큰이 아닌 값을 쓴다 — 34.78 / 42.96 Light.
+  /// 다른 데서 쓰지 않는다.
+  static TextStyle get homeGreeting =>
+      _base(size: 34.78, height: 42.96, weight: FontWeight.w300);
 }

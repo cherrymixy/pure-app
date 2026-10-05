@@ -55,6 +55,10 @@ abstract final class AppRoutes {
     if (_startRoute.isEmpty || _startRoute == splash) {
       return [onGenerateRoute(const RouteSettings(name: splash))!];
     }
+    // 홈 자체를 지정하면 하나만 쌓는다.
+    if (_startRoute == home) {
+      return [onGenerateRoute(const RouteSettings(name: home))!];
+    }
     return [
       // 뒤로가기로 돌아갈 자리를 하나 깔아 둔다.
       onGenerateRoute(const RouteSettings(name: home))!,

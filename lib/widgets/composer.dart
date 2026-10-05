@@ -7,6 +7,10 @@ import '../data/strings.dart';
 import '../models/message.dart';
 import '../providers/voice_provider.dart';
 import '../services/video_input_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import 'app_icon.dart';
 import 'gray_box.dart';
 
 /// 06-1 / 06-2 입력창 — 텍스트 · 영상(+) · 마이크.
@@ -209,76 +213,135 @@ class ComposerState extends State<Composer> {
     final voice = context.watch<VoiceProvider>();
     final listening = voice.isListening;
 
-    return Material(
-      color: Gray.bg,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (listening || voice.text.isNotEmpty) _VoiceBar(voice: voice),
-              if (_video != null) _VideoChip(
-                video: _video!,
-                onRemove: () => setState(() => _video = null),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        // 시안: 입력창 좌우 여백 22 (402 - 358 의 절반), 바닥에서 약간 띄움.
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, AppSpacing.x8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (listening || voice.text.isNotEmpty) _VoiceBar(voice: voice),
+            if (_video != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.x8),
+                child: _VideoChip(
+                  video: _video!,
+                  onRemove: () => setState(() => _video = null),
+                ),
               ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  IconButton(
-                    onPressed: widget.enabled && !_picking ? _openAttachSheet : null,
-                    icon: _picking
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add),
+            // 시안 `Composer` (455:4296): 높이 59 · radius/full · 왼쪽 패딩 16 ·
+            // 오른쪽 8 · 요소 간격 12 · drop-shadow 0 4 8 rgba(0,0,0,.06).
+            Container(
+              height: 59,
+              decoration: BoxDecoration(
+                color: AppColors.bgSurface,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0F000000),
+                    offset: Offset(0, 4),
+                    blurRadius: 8,
                   ),
+                ],
+              ),
+              padding: const EdgeInsets.only(left: AppSpacing.x16, right: AppSpacing.x8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: widget.enabled && !_picking ? _openAttachSheet : null,
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: _picking
+                          ? const Padding(
+                              padding: EdgeInsets.all(3),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const AppIcon(AppIconName.plus, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.x12),
                   Expanded(
                     child: TextField(
                       controller: widget.controller,
                       enabled: widget.enabled && !listening,
                       minLines: 1,
-                      maxLines: 4,
+                      maxLines: 3,
                       textInputAction: TextInputAction.send,
                       onChanged: (_) => setState(() {}),
                       onSubmitted: (_) => _send(),
+                      style: AppTextStyles.bodyL,
                       decoration: InputDecoration(
+                        // 시안 문구.
                         hintText: listening ? S.composerListening : S.homeInputHint,
-                        filled: true,
-                        fillColor: Gray.card,
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(22),
-                          borderSide: const BorderSide(color: Gray.line),
+                        hintStyle: AppTextStyles.bodyL.copyWith(
+                          color: AppColors.textTertiary,
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(22),
-                          borderSide: const BorderSide(color: Gray.line),
-                        ),
+                        filled: false,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  if (_canSend)
-                    IconButton.filled(
-                      onPressed: _send,
-                      icon: const Icon(Icons.arrow_upward, size: 20),
-                    )
-                  else
-                    IconButton.filled(
-                      onPressed: widget.enabled ? _toggleMic : null,
-                      style: IconButton.styleFrom(
-                        backgroundColor: listening ? Colors.red.shade600 : Gray.accent,
-                      ),
-                      icon: Icon(listening ? Icons.stop : Icons.mic, size: 20),
-                    ),
+                  const SizedBox(width: AppSpacing.x12),
+                  // 시안 `Action`: 43 원형, bg/inverse, 아이콘 22.
+                  _ActionButton(
+                    onTap: widget.enabled
+                        ? (_canSend ? _send : _toggleMic)
+                        : null,
+                    listening: listening,
+                    sending: _canSend,
+                  ),
                 ],
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 입력창 오른쪽의 검은 원형 버튼. 글자가 있으면 전송, 없으면 마이크.
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.onTap,
+    required this.listening,
+    required this.sending,
+  });
+
+  final VoidCallback? onTap;
+  final bool listening;
+  final bool sending;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: listening ? AppColors.statusError : AppColors.bgInverse,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: 43,
+          height: 43,
+          child: Center(
+            child: listening
+                ? const Icon(Icons.stop, size: 20, color: AppColors.iconOnInverse)
+                : sending
+                    ? const Icon(Icons.arrow_upward,
+                        size: 20, color: AppColors.iconOnInverse)
+                    : const AppIcon(
+                        AppIconName.mic,
+                        size: 22,
+                        color: AppColors.iconOnInverse,
+                      ),
           ),
         ),
       ),
@@ -301,7 +364,7 @@ class _VoiceBar extends StatelessWidget {
               width: 8 + voice.level * 56,
               height: 4,
               decoration: BoxDecoration(
-                color: Gray.accent,
+                color: AppColors.bgBrand,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -311,7 +374,7 @@ class _VoiceBar extends StatelessWidget {
                 voice.text.isEmpty ? S.composerListening : voice.text,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, color: Gray.dim),
+                style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
               ),
             ),
           ],
