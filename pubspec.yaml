@@ -19,6 +19,8 @@ dependencies:
   # 입력
   image_picker: ^1.2.3
   fc_native_video_thumbnail: ^3.0.1
+  # 영상 길이를 읽는 데만 쓴다. image_picker 는 앨범에서 고른 영상의 길이를 주지 않는다.
+  video_player: ^2.9.2
   speech_to_text: ^7.5.0
 
   # 저장

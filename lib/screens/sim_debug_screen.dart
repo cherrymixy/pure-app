@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +8,9 @@ import '../data/chips.dart';
 import '../models/motion_spec.dart';
 import '../providers/generation_provider.dart';
 import '../providers/robot_provider.dart';
+import '../models/message.dart';
 import '../services/generation/generation_client.dart';
+import '../services/video_input_service.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_view.dart';
 
@@ -28,6 +31,8 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
   final _log = <String>[];
   StreamSubscription<SimEvent>? _sub;
   String? _capturePreview;
+  VideoAttachment? _video;
+  bool _pickingVideo = false;
   MotionSpec? _lastSpec;
   String? _lastReasoning;
   bool _lastWasDemo = false;
@@ -67,22 +72,57 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
   }
 
   /// 말 → 생성 → 재생. STEP 7 점검용 전체 루프.
+  /// 앨범에서 영상을 고르고 프레임을 뽑는다 (STEP 8 점검).
+  Future<void> _pickVideo() async {
+    final service = context.read<VideoInputService>();
+    setState(() => _pickingVideo = true);
+    try {
+      final attachment = await service.pickFromGallery();
+      if (!mounted) return;
+      if (attachment == null) {
+        setState(() => _log.insert(0, 'video · 취소되거나 길이를 읽지 못함'));
+        return;
+      }
+      setState(() {
+        _video = attachment;
+        _log.insert(
+          0,
+          'video · ${attachment.durationSec.toStringAsFixed(1)}s · '
+          '구간 ${attachment.trimStart.toStringAsFixed(1)}~'
+          '${attachment.trimEnd.toStringAsFixed(1)}s',
+        );
+      });
+    } finally {
+      if (mounted) setState(() => _pickingVideo = false);
+    }
+  }
+
   Future<void> _send({String? chipId}) async {
     final text = _input.text.trim();
-    if (text.isEmpty) return;
+    final video = _video;
+    if (text.isEmpty && video == null) return;
 
     final gen = context.read<GenerationProvider>();
     final robot = context.read<RobotProvider>();
+    final videoService = context.read<VideoInputService>();
 
     setState(() {
-      _log.insert(0, 'generating · "$text"');
+      _log.insert(0, 'generating · "$text"${video == null ? '' : ' + video'}');
       _lastSpec = null;
       _lastReasoning = null;
     });
 
+    var frames = const <String>[];
+    if (video != null) {
+      frames = await videoService.extractFrames(video);
+      if (!mounted) return;
+      setState(() => _log.insert(0, 'frames · ${frames.length}장 추출'));
+    }
+
     final result = await gen.generate(GenerationRequest(
       signature: robot.signature,
       text: text,
+      frames: frames,
       chipId: chipId,
     ));
 
@@ -280,6 +320,8 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
                           ),
                         ),
                         const SizedBox(width: 6),
+                        _Btn(_pickingVideo ? '…' : '+', _pickingVideo ? () {} : _pickVideo),
+                        const SizedBox(width: 6),
                         Consumer<GenerationProvider>(
                           builder: (context, gen, _) => _Btn(
                             gen.isBusy ? '…' : 'send',
@@ -288,6 +330,33 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
                         ),
                       ],
                     ),
+                    if (_video != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (_video!.thumbPath.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.file(
+                                File(_video!.thumbPath),
+                                width: 44,
+                                height: 44,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const SizedBox(width: 44),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${_video!.durationSec.toStringAsFixed(1)}s · '
+                              '구간 ${_video!.selectedSec.toStringAsFixed(1)}s',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF9AA0AD)),
+                            ),
+                          ),
+                          _Btn('x', () => setState(() => _video = null)),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,

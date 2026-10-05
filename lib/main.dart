@@ -13,6 +13,7 @@ import 'repositories/local_repository.dart';
 import 'screens/sim_debug_screen.dart';
 import 'services/generation/generation_service.dart';
 import 'services/thumbnail_store.dart';
+import 'services/video_input_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,9 @@ class PureApp extends StatelessWidget {
       providers: [
         Provider<DataRepository>.value(value: repository),
         Provider<ThumbnailStore>.value(value: thumbnails),
+        Provider<VideoInputService>(
+          create: (_) => VideoInputService(store: thumbnails),
+        ),
         ChangeNotifierProvider(create: (_) => ProfileProvider(repository)),
         ChangeNotifierProvider(create: (_) => RobotProvider(repository)),
         ChangeNotifierProvider(create: (_) => ChatProvider(repository)),
