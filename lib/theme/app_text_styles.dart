@@ -7,12 +7,15 @@ import 'app_colors.dart';
 /// 이름은 Figma 스타일 이름을 따른다. `PURE/Title/M` → [titleM].
 /// 폰트 파일 연결은 STEP 21 에서 한다 — 그 전까지는 시스템 폰트로 떨어진다.
 abstract final class AppTextStyles {
-  /// Figma `F / Typography` 에 적힌 패밀리.
-  /// STEP 21 에서 assets/fonts/ 에 넣고 pubspec 에 등록한다.
-  static const String fontFamily = 'Google Sans Flex';
+  /// 본문 폰트.
+  ///
+  /// Figma 에는 `Google Sans Flex` 로 적혀 있지만 **Pretendard** 를 쓴다(승아 결정).
+  /// 한글까지 한 파일로 덮고 OFL 라이선스라 임베드가 자유롭다. 크기·행간·굵기는
+  /// 시안 값을 그대로 쓰므로 레이아웃은 달라지지 않는다.
+  static const String fontFamily = 'Pretendard';
 
-  /// 한글이 섞일 때의 대체 폰트. 영어 UI 지만 사용자가 입력한 글자는 한글일 수 있다.
-  static const List<String> fontFamilyFallback = ['Apple SD Gothic Neo'];
+  /// Pretendard 가 라틴·한글을 모두 덮으므로 폴백은 시스템 기본만 둔다.
+  static const List<String> fontFamilyFallback = <String>[];
 
   static TextStyle _base({
     required double size,

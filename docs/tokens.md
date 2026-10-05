@@ -103,7 +103,11 @@ Figma 파일 `xp0RmyE9WwsNFAF5kE88OX` → **Design System** 페이지(`70:1520`)
 
 ## 타이포
 
-패밀리는 **Google Sans Flex**. 폰트 파일 연결은 STEP 21에서 한다.
+패밀리는 **Pretendard** (승아 결정, STEP 21).
+
+> Figma에는 `Google Sans Flex`로 적혀 있다. Pretendard는 한글까지 한 파일로 덮고
+> OFL 1.1이라 임베드가 자유롭다. **크기·행간·굵기는 시안 값을 그대로 쓰므로
+> 레이아웃은 달라지지 않는다.** 설계에 쓰이는 굵기는 400·500 둘뿐이라 둘만 넣었다.
 
 | Figma | Dart | 크기/행간 | 굵기 |
 |---|---|---|---|
@@ -177,6 +181,6 @@ Figma 파일 `xp0RmyE9WwsNFAF5kE88OX` → **Design System** 페이지(`70:1520`)
 
 | 항목 | 언제 |
 |---|---|
-| 폰트 파일 임베드 (Google Sans Flex) | STEP 21 |
-| 아이콘 SVG 추출 (`ICON 원본` `407:82771`) | STEP 21 |
-| 홈 글로우의 위치·크기 | STEP 23 |
+| 사이드바 아이콘 6종의 쓰임 (`Icon/LNB` `488:4750`) | STEP 22 (사이드바 번역 시) |
+| 스플래시 로고 (`logo_motion_mobile 3` — 받은 이미지가 비어 있음) | STEP 22 (스플래시 번역 시) |
+| 홈 글로우의 위치·크기 — **현재 시안의 홈은 `bg/brand-glow`를 쓰지 않는다** | STEP 22에서 확인 |

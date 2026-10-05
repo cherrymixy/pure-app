@@ -30,6 +30,8 @@ dependencies:
   # 기타
   wakelock_plus: ^1.8.1
   http: ^1.6.0
+  # Figma 에서 뽑은 아이콘을 그린다. 색은 코드에서 입힌다(토큰 사용).
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:
@@ -39,8 +41,19 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  fonts:
+    # Pretendard (OFL 1.1). 시안의 Google Sans Flex 대신 쓴다 — 한글까지 한 파일로
+    # 덮고 라이선스가 자유롭다. 설계에 쓰이는 굵기는 400·500 둘뿐이라 둘만 넣는다.
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Medium.otf
+          weight: 500
+
   assets:
     - assets/images/
+    - assets/images/icons/
     # Flutter 의 폴더 선언은 하위 폴더를 포함하지 않는다. sim 번들의 모든 폴더를
     # 하나씩 적어야 한다 — 빠뜨리면 로컬 서버가 200 에 0바이트를 돌려줘 조용히 실패한다.
     # scripts/build_sim.sh 가 빌드할 때마다 이 목록을 검사한다.
