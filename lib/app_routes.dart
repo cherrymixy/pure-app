@@ -58,7 +58,7 @@ abstract final class AppRoutes {
     return [
       // 뒤로가기로 돌아갈 자리를 하나 깔아 둔다.
       onGenerateRoute(const RouteSettings(name: home))!,
-      if (onGenerateRoute(RouteSettings(name: _startRoute)) case final r?) r,
+      ?onGenerateRoute(RouteSettings(name: _startRoute)),
     ];
   }
 

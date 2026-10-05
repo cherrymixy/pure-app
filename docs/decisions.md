@@ -85,3 +85,7 @@
 | 2026-10-06 | 10-⑥ | 전시 운영: **Version 을 5번 탭하면 Reset demo data**. 확인 시트 → 저장소 시드 복원 → 참조 없는 썸네일 정리 → Provider 리프레시 → 홈으로. 첫 실행 플래그도 지워지므로 다음 관람객에게 05 부터 보여 줄 수 있다. |
 | 2026-10-06 | 10-⑥ | Provider 에 `refresh()` 를 추가했다. 저장소를 통째로 갈아끼운 뒤 화면 쪽에서 `notifyListeners()` 를 직접 부르려 했는데, 그건 ChangeNotifier 외부에서 쓸 수 없는 보호 멤버다(분석기가 잡음). 공개 메서드로 감쌌다. |
 | 2026-10-06 | 10-⑥ | **STEP 10 회색박스 6슬라이스 완료.** 자리표시자 화면이 전부 사라졌고 사이드바의 모든 경로가 실제 화면으로 연결된다. 테스트 181건, 분석 0건, 시뮬레이터 예외·오버플로 0건. |
+| 2026-10-06 | 11 | 통합 테스트 `test/integration_test.dart` — 화면이 부르는 순서 그대로 엮은 7개 시나리오 16건. 생성은 FakeClient, 시계는 주입, 저장소는 임시 폴더의 진짜 파일. 플레이북 지정 항목을 모두 덮는다: 해피패스(시그니처→칩→질문형→저장→Auto 그룹), 같은 상황 두 번째 저장 시 askFirst 강등, 피드백 버전 누적과 v1 저장, 실패 5종 데모 폴백, 시그니처 스냅샷 불변, 이름·Rename·Delete·editCount, Reset demo data. |
+| 2026-10-06 | 11 | 테스트가 잡은 것: 해피패스에서 'Welcome home' 로 저장하면 **시드와 중복이라 거부**된다 — 저장 시트가 쓰는 `suggestName(taken:)` 로 'Welcome home 2' 가 제안되는 게 실제 동작이고, 테스트를 그 흐름에 맞췄다. |
+| 2026-10-06 | 11 | 동결 전 정리: 분석 7건(BuildContext async gap, null-aware element, 테스트 다중 언더스코어)을 전부 해소해 **analyze 0건**. 쓰이지 않게 된 `placeholder_screen.dart` 삭제. TODO/FIXME·skip·only 없음. |
+| 2026-10-06 | 11 | **v0.1-logic 동결.** 테스트 197건, 분석 0건, 시뮬레이터 예외 0건. 이후 디자인 패스(STEP 20~25)에서는 `models/ services/ repositories/ providers/ data/ sim/` 를 수정하지 않는다 (CLAUDE.md 규칙 2). |

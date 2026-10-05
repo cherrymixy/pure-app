@@ -171,16 +171,20 @@ class _SignatureScreenState extends State<SignatureScreen> {
   // ---------------------------------------------------------------- 선택
 
   Future<void> _choose(MotionSignature next) async {
+    // await 를 건넌 뒤 context 를 다시 읽지 않도록 필요한 것을 먼저 꺼내 둔다.
+    final robot = context.read<RobotProvider>();
+    final navigator = Navigator.of(context);
+
     setState(() => _draft = next);
     await _applyIdle();
 
     if (_isEdit) {
       // 편집 모드는 고르는 즉시 저장하고 돌아간다 (08-2).
-      await context.read<RobotProvider>().updateSignature(_draft);
+      await robot.updateSignature(_draft);
       if (!mounted) return;
       await _playGreeting();
       if (!mounted) return;
-      Navigator.pop(context);
+      navigator.pop();
       return;
     }
 

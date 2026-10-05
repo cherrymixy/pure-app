@@ -161,7 +161,7 @@ void main() {
     test('전부 실패하면 빈 목록 (텍스트만으로 생성한다)', () async {
       final service = VideoInputService(
         durationReader: (_) async => const Duration(seconds: 10),
-        frameGrabber: (_, __) async => null,
+        frameGrabber: (_, _) async => null,
       );
       final a = await service.attachmentFor('/fake/v.mp4');
       expect(await service.extractFrames(a!), isEmpty);
@@ -170,7 +170,7 @@ void main() {
     test('추출이 던져도 삼키지 않고 빈 목록으로 떨어진다', () async {
       final service = VideoInputService(
         durationReader: (_) async => const Duration(seconds: 10),
-        frameGrabber: (_, __) async => Uint8List(0),
+        frameGrabber: (_, _) async => Uint8List(0),
       );
       final a = await service.attachmentFor('/fake/v.mp4');
       expect(await service.extractFrames(a!), isEmpty);
@@ -189,7 +189,7 @@ void main() {
       final service = VideoInputService(
         store: store,
         durationReader: (_) async => const Duration(seconds: 12),
-        frameGrabber: (_, __) async => _jpeg,
+        frameGrabber: (_, _) async => _jpeg,
       );
       final a = await service.attachmentFor('/fake/v.mp4');
       expect(a!.thumbPath, isNotEmpty);
@@ -199,7 +199,7 @@ void main() {
     test('원본 경로를 그대로 들고 있다 (앱 밖으로 나가지 않는다)', () async {
       final service = VideoInputService(
         durationReader: (_) async => const Duration(seconds: 5),
-        frameGrabber: (_, __) async => _jpeg,
+        frameGrabber: (_, _) async => _jpeg,
       );
       final a = await service.attachmentFor('/private/var/video.MOV');
       expect(a!.path, '/private/var/video.MOV');
@@ -209,7 +209,7 @@ void main() {
     test('길이가 0 이면 첨부를 만들지 않는다', () async {
       final service = VideoInputService(
         durationReader: (_) async => Duration.zero,
-        frameGrabber: (_, __) async => _jpeg,
+        frameGrabber: (_, _) async => _jpeg,
       );
       expect(await service.attachmentFor('/fake/v.mp4'), isNull);
     });
