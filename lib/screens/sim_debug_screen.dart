@@ -1,7 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../data/chips.dart';
+import '../models/motion_spec.dart';
+import '../providers/generation_provider.dart';
+import '../providers/robot_provider.dart';
+import '../services/generation/generation_client.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_view.dart';
 
@@ -18,9 +24,13 @@ class SimDebugScreen extends StatefulWidget {
 
 class _SimDebugScreenState extends State<SimDebugScreen> {
   final _sim = SimController();
+  final _input = TextEditingController();
   final _log = <String>[];
   StreamSubscription<SimEvent>? _sub;
   String? _capturePreview;
+  MotionSpec? _lastSpec;
+  String? _lastReasoning;
+  bool _lastWasDemo = false;
 
   /// --dart-define=SIM_SELFTEST=1 로 빌드하면 ready 직후 브리지 전체를 자동으로 돌린다.
   /// 결과는 로그로 나가므로 사람이 버튼을 누르지 않아도 검증할 수 있다.
@@ -51,8 +61,50 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
   @override
   void dispose() {
     _sub?.cancel();
+    _input.dispose();
     _sim.dispose();
     super.dispose();
+  }
+
+  /// 말 → 생성 → 재생. STEP 7 점검용 전체 루프.
+  Future<void> _send({String? chipId}) async {
+    final text = _input.text.trim();
+    if (text.isEmpty) return;
+
+    final gen = context.read<GenerationProvider>();
+    final robot = context.read<RobotProvider>();
+
+    setState(() {
+      _log.insert(0, 'generating · "$text"');
+      _lastSpec = null;
+      _lastReasoning = null;
+    });
+
+    final result = await gen.generate(GenerationRequest(
+      signature: robot.signature,
+      text: text,
+      chipId: chipId,
+    ));
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      _lastSpec = result.spec;
+      _lastReasoning = result.spec.reasoning;
+      _lastWasDemo = result.isDemo;
+      _log.insert(
+        0,
+        '${result.isDemo ? 'demo' : 'gpt'} · ${result.spec.name} · '
+        '${result.spec.recipe.steps.map((s) => s.behavior).join(' → ')}',
+      );
+      if (result.validationReasons.isNotEmpty) {
+        _log.insert(0, 'fixed · ${result.validationReasons.first}');
+      }
+    });
+
+    // 시그니처는 레시피에 이미 반영돼 있다 — 배율을 또 넘기지 않는다.
+    await _guard(() => _sim.playRecipe(result.spec.recipe.toJson()));
+    await _guard(() => _sim.setFace(result.spec.face));
   }
 
   Future<void> _runSelfTest() async {
@@ -204,6 +256,99 @@ class _SimDebugScreenState extends State<SimDebugScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ---- STEP 7 점검: 말 → 생성 → 재생 ----
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _input,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _send(),
+                            decoration: InputDecoration(
+                              hintText: 'Tell Purebot what happened…',
+                              hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                              filled: true,
+                              fillColor: const Color(0xFF24242E),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Consumer<GenerationProvider>(
+                          builder: (context, gen, _) => _Btn(
+                            gen.isBusy ? '…' : 'send',
+                            gen.isBusy ? () {} : _send,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final c in kHomeChips)
+                          _Btn(c.label, () {
+                            _input.text = c.label;
+                            _send(chipId: c.id);
+                          }),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Consumer<GenerationProvider>(
+                      builder: (context, gen, _) => Row(
+                        children: [
+                          _Btn(
+                            gen.forceDemo ? 'demo mode: ON' : 'demo mode: off',
+                            () => gen.toggleDemoMode(),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            gen.canUseOpenAI ? 'key loaded' : 'no key — demo only',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF9AA0AD)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_lastReasoning != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1C1C25),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _lastWasDemo
+                                ? const Color(0xFF6A5A2A)
+                                : const Color(0xFF2A3A5A),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_lastWasDemo ? 'DEMO' : 'GPT'} · ${_lastSpec?.name ?? ''}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: Colors.white54, letterSpacing: 1),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _lastReasoning!,
+                              style: const TextStyle(
+                                  fontSize: 12, height: 1.4, color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
