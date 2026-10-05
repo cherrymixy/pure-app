@@ -1,0 +1,15 @@
+{
+  "xml": [
+    "scene_sim.xml",
+    "robot.xml"
+  ],
+  "meshes": [
+    "base.stl",
+    "head.stl",
+    "head_bezel.stl",
+    "lower_arm.stl",
+    "neck.stl",
+    "turret.stl",
+    "upper_arm.stl"
+  ]
+}

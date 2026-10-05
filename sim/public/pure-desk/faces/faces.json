@@ -1,0 +1,20 @@
+{
+  "default": "neutral.mp4",
+  "behaviors": {
+    "idle": "neutral.mp4",
+    "look_around": "neutral.mp4",
+    "sweep": "neutral.mp4",
+    "focus": "neutral.mp4",
+    "home": "neutral.mp4",
+    "wake": "neutral.mp4",
+    "shake": "neutral.mp4",
+    "curious": "tilt.mp4",
+    "alert": "surprise.mp4",
+    "sad": "sad.mp4",
+    "nod": "smile.mp4",
+    "greet": "smile.mp4",
+    "doze": "sleepy.mp4",
+    "sleep": "sleepy.mp4",
+    "happy": "heart.mp4"
+  }
+}

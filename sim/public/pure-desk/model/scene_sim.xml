@@ -1,0 +1,24 @@
+<mujoco model="pure_desk_robot_sim">
+  <!--
+    Scene for the PURE desk robot. Unlike LeLamp's scene this needs no weld:
+    the kinematic tree is rooted at the base, which is fixed to the world.
+  -->
+  <include file="robot.xml"/>
+  <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <visual>
+    <global offwidth="1920" offheight="1080" azimuth="200" elevation="-12"/>
+    <headlight diffuse="0.7 0.7 0.72" ambient="0.45 0.45 0.48" specular="0.12 0.12 0.12"/>
+    <map znear="0.005" zfar="30"/>
+    <quality shadowsize="4096"/>
+  </visual>
+  <asset>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.22 0.26 0.31"
+      rgb2="0.15 0.18 0.22" markrgb="0.55 0.58 0.62" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="4 4" reflectance="0.15"/>
+  </asset>
+  <worldbody>
+    <light pos="0.6 -0.6 2.2" dir="-0.25 0.25 -1" directional="true" diffuse="0.65 0.63 0.6" castshadow="true"/>
+    <light pos="-0.8 0.8 1.4" dir="0.4 -0.4 -1" directional="true" diffuse="0.22 0.22 0.26" castshadow="false"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+  </worldbody>
+</mujoco>

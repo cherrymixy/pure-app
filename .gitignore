@@ -54,3 +54,5 @@ assets/sim/*
 # ── OMC 운영 산출물 (.omc/skills 는 예외) ──
 .omc/*
 !.omc/skills/
+# 하위 폴더에 생긴 .omc 흔적 (작업 디렉터리를 옮겨 다닐 때 생긴다)
+**/.omc/

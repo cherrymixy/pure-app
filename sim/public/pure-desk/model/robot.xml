@@ -1,0 +1,102 @@
+<?xml version="1.0" ?>
+<!--
+  PURE desk robot (5-DOF) — rigged from the Rhino STL "시뮬레이션 테스트용.stl".
+
+  Kinematic chain (root = base, fixed to the table — no freejoint, no weld):
+    base ─J1 yaw(+Z)─ turret ─J2 shoulder(X)─ lower_arm ─J3 elbow(X)─ upper_arm
+         ─J4 head pan(+Z)─ neck ─J5 head tilt(X)─ head
+
+  Joint / actuator names "1".."5" follow the LeLamp convention (name = servo id) so
+  the existing runtime (components/lelamp/lamp.ts) can drive this model unchanged:
+    1 base_yaw · 2 base_pitch(shoulder) · 3 elbow_pitch · 4 head pan (LeLamp: wrist_roll) · 5 head tilt (wrist_pitch)
+
+  Frames: metres, +Z up, the screen faces -Y. Body frames sit on the joint pivots,
+  world-aligned at the CAD pose (all joints = 0 reproduces the Rhino pose).
+  Signs: J2/J3 + = lean/fold forward-down, J5 − = head looks down (LeLamp semantics).
+
+  Geometry edits vs. the CAD file (see scripts/pure-desk/build_meshes.py): a shoulder slot cut
+  to exactly the lower arm's sweep,
+  head raised 26 mm on a neck column, T-bracket trimmed + slot in the head's lower shell so
+  the head can tilt. Joint ranges below are the self-collision-free single-joint ranges of
+  the edited geometry (mesh sweep, 3° steps) with a small margin.
+
+  PROVISIONAL: pivots are fitted from geometry and masses are estimates — replace with real
+  servo/CAD values when available.
+-->
+<mujoco model="pure_desk_robot">
+  <compiler angle="degree" meshdir="assets" autolimits="true"/>
+
+  <default>
+    <default class="sts3215">
+      <joint damping="0.60" frictionloss="0.052" armature="0.028"/>
+      <position kp="17.8" kv="0.0" forcerange="-3.35 3.35"/>
+    </default>
+    <default class="visual">
+      <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+    </default>
+  </default>
+
+  <asset>
+    <material name="shell"  rgba="0.93 0.93 0.91 1"/>
+    <material name="shell2" rgba="0.86 0.86 0.84 1"/>
+    <material name="joint"  rgba="0.55 0.56 0.58 1"/>
+    <!-- face front (bezel) — Face UI frame colour #1c1c1c, a touch darker to offset the stage lighting -->
+    <material name="bezel"  rgba="0.07 0.07 0.07 1"/>
+    <mesh name="base"      file="base.stl"/>
+    <mesh name="turret"    file="turret.stl"/>
+    <mesh name="lower_arm" file="lower_arm.stl"/>
+    <mesh name="upper_arm" file="upper_arm.stl"/>
+    <mesh name="neck"      file="neck.stl"/>
+    <mesh name="head"      file="head.stl"/>
+    <mesh name="head_bezel" file="head_bezel.stl"/>
+  </asset>
+
+  <worldbody>
+    <body name="base" pos="0 0 0">
+      <inertial pos="0 0 0.03" mass="0.45" diaginertia="0.0011 0.0011 0.0013"/>
+      <geom class="visual" mesh="base" material="shell2"/>
+
+      <body name="turret" pos="0 0 0.065">
+        <joint name="1" class="sts3215" axis="0 0 1" range="-150 150"/>
+        <inertial pos="0 0 0.02" mass="0.12" diaginertia="0.00012 0.00012 0.00018"/>
+        <geom class="visual" mesh="turret" material="shell"/>
+
+        <body name="lower_arm" pos="-0.0005 0.010 0.0166">
+          <joint name="2" class="sts3215" axis="1 0 0" range="-35 55"/>
+          <inertial pos="0 0.04 0.08" mass="0.08" diaginertia="0.00028 0.00024 0.00006"/>
+          <geom class="visual" mesh="lower_arm" material="shell"/>
+
+          <body name="upper_arm" pos="0 0.0716 0.1535">
+            <joint name="3" class="sts3215" axis="1 0 0" range="-120 33"/>
+            <inertial pos="0 -0.06 0" mass="0.07" diaginertia="0.00002 0.00016 0.00016"/>
+            <geom class="visual" mesh="upper_arm" material="shell"/>
+
+            <body name="neck" pos="0.0004 -0.1275 0.0143">
+              <joint name="4" class="sts3215" axis="0 0 1" range="-160 160"/>
+              <inertial pos="0 0.008 0.02" mass="0.04" diaginertia="0.00006 0.00001 0.00006"/>
+              <geom class="visual" mesh="neck" material="joint"/>
+
+              <body name="head" pos="-0.0005 0.0093 0.0694">
+                <joint name="5" class="sts3215" axis="-1 0 0" range="-33 42"/>
+                <inertial pos="0 -0.01 0.01" mass="0.15" diaginertia="0.00018 0.00045 0.00045"/>
+                <geom class="visual" mesh="head" material="shell"/>
+                <geom class="visual" mesh="head_bezel" material="bezel"/>
+                <!-- The face display is drawn by the web viewer (RobotSpec.display in
+                     lib/lelamp/robots.ts) so it can show expression videos. -->
+                <site name="head_site" pos="0 -0.045 0.01"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position class="sts3215" name="1" joint="1" inheritrange="1"/>
+    <position class="sts3215" name="2" joint="2" inheritrange="1"/>
+    <position class="sts3215" name="3" joint="3" inheritrange="1"/>
+    <position class="sts3215" name="4" joint="4" inheritrange="1"/>
+    <position class="sts3215" name="5" joint="5" inheritrange="1"/>
+  </actuator>
+</mujoco>
