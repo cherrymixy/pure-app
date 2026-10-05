@@ -103,3 +103,4 @@
 | 2026-10-06 | 22 | **글로우는 PNG 로 넣는다.** SVG 로 받으면 `flutter_svg` 가 가우시안 블러 필터를 지원하지 않아 타원 세 개가 그대로 보인다. Figma 가 블러까지 렌더한 3배 PNG(1206×1620, 343KB)를 쓴다. |
 | 2026-10-06 | 22 | 신규 위젯: `pure_chip.dart`(높이 43·좌우 16·radius full·Label/S, Default/Selected/Dimmed), `pure_top_bar.dart`(햄버거 44 — 시안이 도형으로 그려 둬 막대 3개를 그대로 옮김, 종 24.55). Composer 를 시안 `455:4296` 대로 교체(높이 59·radius full·그림자 0 4 8 6%·검은 원형 액션 43). 아이콘 plus·mic·bell 을 화면에서 직접 받았다. |
 | 2026-10-06 | 22 | 세로 배치는 비율(Spacer flex)로 한다 — 시안 874 vs 기기 852. 가로 여백·요소 크기는 시안 값 그대로(입력창 좌우 22, 칩 묶음 폭 321, 상단바 여백 15.34). |
+- STEP 22 채팅 화면(06-2~06-6, 06-E1) 번역: Figma Dev Mode 값으로 말풍선 5종(User Text/Media, Robot Text/Simulation/Typing)·동작 칩·Now playing 바·Top fade·Back 상단바를 옮김. 로봇 답장은 카드가 아니라 채팅 폭 전체의 검은 말풍선(neutral/900, radius 24, 영상 311×232)이고 Play/Save 는 말풍선 아래 칩으로 내려갔다. 실패 말풍선 본문은 시안 문구와 다르나 data/ 는 디자인 패스에서 못 건드려 그대로 뒀다.

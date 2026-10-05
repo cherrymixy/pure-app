@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_routes.dart';
 import '../providers/notification_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import 'app_icon.dart';
 
 /// 홈 상단바 — Figma `480:2069`.
@@ -32,6 +33,43 @@ class PureTopBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 뒤로가기 상단바 — Figma `Top Bar / Back` (`453:4186`).
+///
+/// 시안 값: 높이 56 · 왼쪽 패딩 12 · 오른쪽 16 · 버튼 44 안에 아이콘 24.
+/// 오른쪽은 비워 둔다 (시안에 아무것도 없다).
+class PureBackBar extends StatelessWidget {
+  const PureBackBar({super.key, this.onBack, this.trailing});
+
+  /// 없으면 그냥 pop.
+  final VoidCallback? onBack;
+
+  /// 시안에는 없지만 화면이 필요로 하면 오른쪽에 붙인다.
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        height: 56,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 12, right: AppSpacing.x16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              InkResponse(
+                onTap: onBack ?? () => Navigator.maybePop(context),
+                radius: 24,
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(child: AppIcon(AppIconName.arrowBack, size: 24)),
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+        ),
+      );
 }
 
 /// 햄버거. 시안이 도형으로 그려 둬서 아이콘 대신 그대로 옮긴다.

@@ -12,6 +12,7 @@ import '../models/saved_motion.dart';
 import '../providers/chat_provider.dart';
 import '../providers/generation_provider.dart';
 import '../providers/library_provider.dart';
+import '../providers/profile_provider.dart';
 import '../providers/robot_provider.dart';
 import '../services/generation/generation_client.dart';
 import '../services/motion_engine.dart';
@@ -19,9 +20,13 @@ import '../services/thumbnail_store.dart';
 import '../services/video_input_service.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_host.dart';
-import '../widgets/app_shell.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/composer.dart';
 import '../widgets/gray_box.dart';
+import '../widgets/pure_top_bar.dart';
 import '../widgets/robot_card.dart';
 import '../widgets/save_sheet.dart';
 import 'home_screen.dart';
@@ -63,9 +68,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   SimController get _sim => SimHost.controllerOf(context);
 
+  /// 위쪽 페이드는 스크롤이 시작돼야 보인다 (시안 06-E1 은 opacity 0).
+  bool _scrolled = false;
+
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
@@ -74,8 +83,14 @@ class _ChatScreenState extends State<ChatScreen> {
     _playTimer?.cancel();
     _simSub?.cancel();
     _text.dispose();
+    _scroll.removeListener(_onScroll);
     _scroll.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final scrolled = _scroll.hasClients && _scroll.offset > 4;
+    if (scrolled != _scrolled) setState(() => _scrolled = scrolled);
   }
 
   Future<void> _bootstrap() async {
@@ -86,10 +101,13 @@ class _ChatScreenState extends State<ChatScreen> {
     await chat.ensureCurrent();
 
     final entry = widget.entry;
-    if (entry != null) {
-      _lastUserText = entry.text;
-      await _send(text: entry.text ?? '', video: entry.video, chipId: entry.chipId);
+    if (entry == null) {
+      // 이어 보는 대화는 마지막 답장이 보이는 자리에서 시작한다.
+      _scrollToEnd();
+      return;
     }
+    _lastUserText = entry.text;
+    await _send(text: entry.text ?? '', video: entry.video, chipId: entry.chipId);
   }
 
   void _onSimEvent(SimEvent e) {
@@ -343,33 +361,63 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     }
 
-    return AppShell(
-      onBack: () => Navigator.pop(context),
-      title: null,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.history),
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.chats),
-        ),
-      ],
-      floating: Column(
-        mainAxisSize: MainAxisSize.min,
+    final name = context.watch<ProfileProvider>().name;
+
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      resizeToAvoidBottomInset: true,
+      body: Stack(
         children: [
-          if (_playingSpecId != null) _PlayingBar(elapsed: _playElapsed, onStop: _stop),
-          Composer(
-            key: _composerKey,
-            controller: _text,
-            onSend: _onComposerSend,
-            enabled: true,
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                const PureBackBar(),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      // 시안 `Chat` (480:2458): 좌우 여백 25, 말풍선 사이 20.
+                      ListView.separated(
+                        controller: _scroll,
+                        // 아래는 입력창(59 + 바깥 여백 8 + 홈 인디케이터) 만큼 비운다.
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpacing.x24,
+                          AppSpacing.x24,
+                          AppSpacing.x24,
+                          MediaQuery.paddingOf(context).bottom + 91,
+                        ),
+                        itemCount: messages.length + 1,
+                        // 인사말 다음만 36, 나머지는 20.
+                        separatorBuilder: (_, i) =>
+                            SizedBox(height: i == 0 ? 36 : AppSpacing.x20),
+                        itemBuilder: (context, i) => i == 0
+                            ? _Greeting(name: name)
+                            : _buildMessage(messages[i - 1]),
+                      ),
+                      _TopFade(visible: _scrolled),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_playingSpecId != null)
+                  _NowPlayingBar(elapsed: _playElapsed, onStop: _stop),
+                Composer(
+                  key: _composerKey,
+                  controller: _text,
+                  onSend: _onComposerSend,
+                  enabled: true,
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-      child: ListView.separated(
-        controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        itemCount: messages.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, i) => _buildMessage(messages[i]),
       ),
     );
   }
@@ -377,23 +425,22 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessage(Message m) {
     if (m.sender == Sender.user) return _UserBubble(message: m);
 
+    // 로봇 쪽은 전부 왼쪽 정렬이다 (시안 `Chat`).
+    final Widget bubble;
     switch (m.status) {
       case MessageStatus.generating:
-        return TypingBubble(delayed: _delayed);
+        bubble = TypingBubble(delayed: _delayed);
       case MessageStatus.failed:
-        return FailedBubble(
-          onRetry: () => _send(text: _lastUserText ?? ''),
-        );
+        bubble = FailedBubble(onRetry: () => _send(text: _lastUserText ?? ''));
       case MessageStatus.sent:
       case MessageStatus.done:
         final spec = m.spec;
         if (spec == null) return const SizedBox.shrink();
-        final isActive = _activeSpecId == spec.id;
-        return RobotCard(
+        bubble = RobotCard(
           spec: spec,
-          isActive: isActive,
+          isActive: _activeSpecId == spec.id,
+          playing: _playingSpecId == spec.id,
           saved: _savedSpecs.containsKey(spec.id),
-          statusLabel: _playingSpecId == spec.id ? S.playingOnPurebot : null,
           onTap: () => setState(() => _activeSpecId = spec.id),
           onPlay: () => _play(spec),
           onSave: () => _save(spec),
@@ -404,9 +451,55 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
     }
+    return Align(alignment: Alignment.centerLeft, child: bubble);
   }
 }
 
+/// 홈에서 보던 인사말이 채팅 맨 위에 그대로 이어진다 (시안 06-E1 `480:3015`).
+class _Greeting extends StatelessWidget {
+  const _Greeting({required this.name});
+  final String name;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        '${fill(S.homeGreetingLine1, {'name': name})}\n${S.homeGreetingLine2}',
+        style: AppTextStyles.homeGreeting,
+      );
+}
+
+/// 시안 `Top fade` — 위로 스크롤된 말풍선이 상단바 밑으로 사라지게 한다.
+/// 높이 159.65 · `#e4e6e9` → 투명 · 전체 불투명도 50%.
+class _TopFade extends StatelessWidget {
+  const _TopFade({required this.visible});
+  final bool visible;
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        height: 159.65,
+        child: IgnorePointer(
+          child: AnimatedOpacity(
+            opacity: visible ? 1 : 0,
+            duration: const Duration(milliseconds: 180),
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x80E4E6E9), Color(0x00E4E6E9)],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+/// 사용자 말풍선 — 시안 `Chat Bubble / User Text` · `User Media`.
+///
+/// 시안은 글과 영상을 **따로 띄운다**. 둘 다 있으면 영상이 위, 글이 아래로 붙는다.
 class _UserBubble extends StatelessWidget {
   const _UserBubble({required this.message});
   final Message message;
@@ -414,68 +507,99 @@ class _UserBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final video = message.video;
+    final text = message.text ?? '';
+
     return Align(
       alignment: Alignment.centerRight,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.72,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Gray.accent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (video != null) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    if (video.thumbPath.isNotEmpty)
-                      Image.file(
-                        File(video.thumbPath),
-                        width: 160,
-                        height: 120,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            const SizedBox(width: 160, height: 120),
-                      ),
-                    Container(
-                      margin: const EdgeInsets.all(6),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '${video.selectedSec.toStringAsFixed(0)}s',
-                        style: const TextStyle(fontSize: 10, color: Colors.white),
-                      ),
-                    ),
-                  ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (video != null) _UserMediaBubble(video: video),
+          if (video != null && text.isNotEmpty)
+            const SizedBox(height: AppSpacing.x8),
+          if (text.isNotEmpty)
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.72,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.bgSurface,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Text(text, style: AppTextStyles.bodyL),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 시안 `User Media` — 흰 말풍선 안쪽 패딩 16, 영상 140×140(radius 16).
+class _UserMediaBubble extends StatelessWidget {
+  const _UserMediaBubble({required this.video});
+  final VideoAttachment video;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = video.selectedSec.round();
+    final time = '${(s ~/ 60).toString().padLeft(2, '0')}:'
+        '${(s % 60).toString().padLeft(2, '0')}';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.x16),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: SizedBox(
+          width: 140,
+          height: 140,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const ColoredBox(color: Color(0xFF393939)),
+              if (video.thumbPath.isNotEmpty)
+                Image.file(
+                  File(video.thumbPath),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              const ColoredBox(color: Color(0x33000000)),
+              const Center(
+                child: AppIcon(
+                  AppIconName.playMedia,
+                  size: 24,
+                  color: AppColors.iconOnInverse,
                 ),
               ),
-              if ((message.text ?? '').isNotEmpty) const SizedBox(height: 6),
-            ],
-            if ((message.text ?? '').isNotEmpty)
-              Text(
-                message.text!,
-                style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.4),
+              Positioned(
+                left: AppSpacing.x12,
+                bottom: AppSpacing.x12,
+                child: Text(
+                  time,
+                  style: AppTextStyles.labelS.copyWith(
+                    color: AppColors.textOnInverse,
+                  ),
+                ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// 06-6 재생 상태 바 — 입력창 바로 위.
-class _PlayingBar extends StatelessWidget {
-  const _PlayingBar({required this.elapsed, required this.onStop});
+/// 06-6 `Now playing` (`480:2758`) — 입력창 바로 위에 뜨는 흰 막대.
+///
+/// 시안 값: 좌우 여백 23 · radius 24 · 그림자 0 4 16 rgba(0,0,0,.08) ·
+/// 왼쪽 18 / 오른쪽 8 / 위아래 8 · 요소 간격 10 · 세이지 점 8.
+class _NowPlayingBar extends StatelessWidget {
+  const _NowPlayingBar({required this.elapsed, required this.onStop});
 
   final int elapsed;
   final VoidCallback onStop;
@@ -483,24 +607,76 @@ class _PlayingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final time = '${elapsed ~/ 60}:${(elapsed % 60).toString().padLeft(2, '0')}';
+    // 시안은 문구와 시간의 색·굵기가 다르다 — 자리표시자를 기준으로 쪼갠다.
+    final parts = S.playingBar.split('{time}');
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.fromLTRB(23, 0, 23, 10),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+        padding: const EdgeInsets.fromLTRB(18, AppSpacing.x8, AppSpacing.x8, AppSpacing.x8),
         decoration: BoxDecoration(
-          color: Gray.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Gray.line),
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000),
+              offset: Offset(0, 4),
+              blurRadius: 16,
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                fill(S.playingBar, {'time': time}),
-                style: const TextStyle(fontSize: 13),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: AppColors.bgBrand,
+                shape: BoxShape.circle,
               ),
             ),
-            TextButton(onPressed: onStop, child: const Text(S.actionStop)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: parts.first),
+                    TextSpan(
+                      text: time,
+                      style: AppTextStyles.labelM.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (parts.length > 1) TextSpan(text: parts[1]),
+                  ],
+                ),
+                style: AppTextStyles.labelM,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Material(
+              color: AppColors.bgInverse,
+              borderRadius: BorderRadius.circular(18),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onStop,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.x16,
+                    vertical: AppSpacing.x8,
+                  ),
+                  child: Text(
+                    S.actionStop,
+                    style: AppTextStyles.labelS.copyWith(
+                      color: AppColors.textOnInverse,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

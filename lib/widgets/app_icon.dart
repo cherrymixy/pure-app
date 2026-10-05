@@ -31,6 +31,28 @@ enum AppIconName {
   /// 로봇 연결 상태 점 (7).
   dot('dot.svg'),
 
+  // ---- 채팅 (06-2~06-6, 06-E1) ----
+
+  /// 상단바 뒤로가기 (24).
+  arrowBack('arrow_back.svg'),
+
+  /// 답장 아래 `Play on Purebot` 칩 안 (14).
+  playChip('play_chip.svg'),
+
+  /// 답장 아래 `Save` 칩 안 (14).
+  bookmark('bookmark.svg'),
+
+  /// 말풍선 썸네일 가운데 재생 삼각형 (사용자 140 → 24 / 로봇 전폭 → 34).
+  playMedia('play_media_24.svg'),
+
+  /// 실패 말풍선 (16).
+  alert('alert.svg'),
+
+  /// `Try again` 칩 안 (13).
+  refresh('refresh.svg'),
+
+  // ---- 사이드바 메뉴 ----
+
   navHome('nav_home.svg'),
   navLibrary('nav_library.svg'),
   navRobot('nav_robot.svg'),
