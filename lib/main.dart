@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'providers/chat_provider.dart';
+import 'providers/generation_provider.dart';
 import 'providers/library_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/profile_provider.dart';
@@ -10,6 +11,7 @@ import 'providers/robot_provider.dart';
 import 'repositories/data_repository.dart';
 import 'repositories/local_repository.dart';
 import 'screens/sim_debug_screen.dart';
+import 'services/generation/generation_service.dart';
 import 'services/thumbnail_store.dart';
 
 Future<void> main() async {
@@ -44,6 +46,9 @@ class PureApp extends StatelessWidget {
           create: (_) => LibraryProvider(repository, thumbnails: thumbnails),
         ),
         ChangeNotifierProvider(create: (_) => NotificationProvider(repository)),
+        ChangeNotifierProvider(
+          create: (_) => GenerationProvider(GenerationService(), repository),
+        ),
       ],
       child: MaterialApp(
         title: 'PURE',

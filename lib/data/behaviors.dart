@@ -67,6 +67,39 @@ const Map<String, String> kDefaultFaceForBehavior = {
   'happy': 'heart',
 };
 
+/// 동작 설명 — GPT 프롬프트에 그대로 들어간다.
+///
+/// `sim/src/engine/behaviors.ts` 의 한국어 description 을 영어로 옮긴 것. GPT 가
+/// 동작을 고르는 유일한 단서이므로 **무엇이 다른지**가 드러나게 쓴다.
+const Map<String, String> kBehaviorDescriptions = {
+  'idle': 'at rest, breathing quietly',
+  'doze': 'slowly drooping, half asleep',
+  'sleep': 'fully settled down, asleep',
+  'wake': 'stretches up and comes back to attention',
+  'nod': 'a single agreeing nod',
+  'shake': 'shakes the head side to side, saying no',
+  'look_around': 'scans left and right, taking the room in',
+  'curious': 'tilts the head to study something',
+  'happy': 'bounces with delight',
+  'sad': 'slumps down, low and slow',
+  'alert': 'snaps upright, startled',
+  'greet': 'leans forward and waves with the whole body',
+  'sweep': 'sweeps slowly across the desk',
+  'focus': 'leans in close and holds still',
+  'home': 'returns to the neutral resting pose',
+};
+
+/// 표정 설명 — 프롬프트용.
+const Map<String, String> kFaceDescriptions = {
+  'neutral': 'plain eyes, no particular feeling',
+  'smile': 'friendly, pleased',
+  'heart': 'delighted, affectionate',
+  'sad': 'downcast',
+  'sleepy': 'drowsy, half-closed',
+  'surprise': 'wide-eyed, startled',
+  'tilt': 'quizzical, curious',
+};
+
 /// 클립 이징 7종 (sim 의 EASINGS 키).
 const List<String> kEasings = [
   'linear',

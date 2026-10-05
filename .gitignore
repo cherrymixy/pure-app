@@ -5,6 +5,7 @@
 _ref/
 
 # ── 비밀 (OpenAI 키는 --dart-define 으로만) ──
+# docs/samples/ 의 생성 원문은 커밋한다 — 키는 안 들어가고 프롬프트 튜닝 근거가 된다.
 .env
 .env.*
 *.pem

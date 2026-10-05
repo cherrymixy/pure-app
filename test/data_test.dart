@@ -40,6 +40,18 @@ void main() {
       }
     });
 
+    test('프롬프트용 설명이 15종·7종을 전부 덮는다', () {
+      for (final b in kBehaviors) {
+        expect(kBehaviorDescriptions[b], isNotNull, reason: '$b 설명 없음');
+        expect(kBehaviorDescriptions[b], isNotEmpty);
+      }
+      for (final f in kFaces) {
+        expect(kFaceDescriptions[f], isNotNull, reason: '$f 설명 없음');
+      }
+      expect(kBehaviorDescriptions, hasLength(15));
+      expect(kFaceDescriptions, hasLength(7));
+    });
+
     test('루프 동작 6종', () {
       expect(kLoopingBehaviors, {'idle', 'doze', 'sleep', 'sad', 'sweep', 'focus'});
       for (final b in kLoopingBehaviors) {
