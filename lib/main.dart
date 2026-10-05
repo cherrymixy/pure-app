@@ -17,6 +17,7 @@ import 'widgets/app_shell.dart';
 import 'services/generation/generation_service.dart';
 import 'services/thumbnail_store.dart';
 import 'services/video_input_service.dart';
+import 'theme/app_theme.dart';
 import 'services/voice_input_service.dart';
 
 Future<void> main() async {
@@ -63,6 +64,7 @@ class PureApp extends StatelessWidget {
         builder: (context) => MaterialApp(
           title: 'PURE',
           debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
           onGenerateRoute: AppRoutes.onGenerateRoute,
           // 개발 중 특정 화면을 바로 열어 확인하기 위한 통로.
           //   ./scripts/dev.sh install --dart-define=START_ROUTE=/library

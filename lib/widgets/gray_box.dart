@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
-/// STEP 10 회색박스용 기본 조각들.
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+
+/// 회색박스 단계의 기본 조각들.
 ///
-/// 디자인은 STEP 20~24 에서 Figma 를 읽어 전부 교체한다. 여기서는 **동작만** 본다 —
-/// 색·간격·폰트를 고민하지 않는다 (CLAUDE.md 규칙 4).
+/// 색은 STEP 20 에서 토큰으로 돌려놨다 — 임의의 회색을 쓰면 브랜드 색과 어긋나 보여
+/// 오히려 헷갈린다. 레이아웃·치수는 아직 시안을 안 봤고, STEP 22 에서 Figma 컴포넌트를
+/// 읽어 이 파일을 통째로 교체한다.
 abstract final class Gray {
-  static const bg = Color(0xFFF4F4F6);
-  static const card = Colors.white;
-  static const line = Color(0xFFDDDDE3);
-  static const text = Color(0xFF1A1A1F);
-  static const dim = Color(0xFF75757F);
-  static const accent = Color(0xFF3B5BDB);
-  static const warn = Color(0xFFB8860B);
+  static const bg = AppColors.bgCanvas;
+  static const card = AppColors.bgSurface;
+  static const line = AppColors.borderDefault;
+  static const text = AppColors.textPrimary;
+  static const dim = AppColors.textSecondary;
+  static const accent = AppColors.bgBrand;
+  static const warn = AppColors.sage700;
 }
 
 /// 상황 칩 · 필터 칩 공용.
@@ -33,12 +37,12 @@ class GrayChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadius.full),
       child: Container(
         padding: EdgeInsets.fromLTRB(14, 8, onRemove == null ? 14 : 6, 8),
         decoration: BoxDecoration(
           color: selected ? Gray.accent : Gray.card,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.full),
           border: Border.all(color: selected ? Gray.accent : Gray.line),
         ),
         child: Row(

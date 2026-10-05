@@ -7,6 +7,8 @@ import '../models/motion_spec.dart';
 import '../models/saved_motion.dart';
 import '../providers/library_provider.dart';
 import '../services/motion_engine.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import 'gray_box.dart';
 
 /// 저장 시트가 돌려주는 것.
@@ -158,9 +160,9 @@ class _SaveSheetState extends State<_SaveSheet> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF6DD),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE8D9A8)),
+                    color: AppColors.bgBrandSubtle,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(color: AppColors.sage200),
                   ),
                   child: Text(
                     fill(S.saveSheetReplaceWarning, {'name': conflict.name}),

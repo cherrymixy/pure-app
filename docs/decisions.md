@@ -89,3 +89,8 @@
 | 2026-10-06 | 11 | 테스트가 잡은 것: 해피패스에서 'Welcome home' 로 저장하면 **시드와 중복이라 거부**된다 — 저장 시트가 쓰는 `suggestName(taken:)` 로 'Welcome home 2' 가 제안되는 게 실제 동작이고, 테스트를 그 흐름에 맞췄다. |
 | 2026-10-06 | 11 | 동결 전 정리: 분석 7건(BuildContext async gap, null-aware element, 테스트 다중 언더스코어)을 전부 해소해 **analyze 0건**. 쓰이지 않게 된 `placeholder_screen.dart` 삭제. TODO/FIXME·skip·only 없음. |
 | 2026-10-06 | 11 | **v0.1-logic 동결.** 테스트 197건, 분석 0건, 시뮬레이터 예외 0건. 이후 디자인 패스(STEP 20~25)에서는 `models/ services/ repositories/ providers/ data/ sim/` 를 수정하지 않는다 (CLAUDE.md 규칙 2). |
+| 2026-10-06 | 20 | 디자인 토큰. Figma Design System 페이지에서 `get_variable_defs` 로 읽어 `lib/theme/` 5개 파일 생성 — app_colors(primitives 38 + semantic 32), app_text_styles(12종), app_spacing(간격 9 + 라운드 6), app_effects(그림자 2 + 블러 + 글로우), app_theme(ThemeData). 표는 `docs/tokens.md`. 추측값 없음. |
+| 2026-10-06 | 20 | **브랜드 색은 세이지 `#789ba2` 다.** PRD §11 은 "홈 배경의 블루 라디얼 글로우, 블루 원형 마이크"라고 적고 있으나 Figma 의 `bg/brand-glow` 는 `sage/200 #a9c2c7` 이고 파랑(`blue/500`)은 `status/live` 한 군데에만 쓰인다. 화면 SSOT 는 Figma 이므로 세이지를 따른다 — PRD 문구가 오래된 것으로 본다. |
+| 2026-10-06 | 20 | **폰트는 `Google Sans Flex`** (부록 D 🟡 해소). 12개 스타일 전부 자간 0, 행간은 px 로 적혀 있어 Flutter 의 배수로 환산했다. 파일 임베드는 STEP 21. 한글 입력 대비 `Apple SD Gothic Neo` 폴백을 둔다. |
+| 2026-10-06 | 20 | 라운드는 시안이 쓰임새를 명시했다 — xs 8 Small tag / sm 12 Thumbnail / md 16 Input·Card(S) / lg 20 Card·Bubble / xl 28 Sheet·Robot card / full 999 Button·Chip. 간격은 4px 그리드(화면 여백 24, 카드 내부 16~20, 요소 간격 8/12/16). |
+| 2026-10-06 | 20 | 회색박스의 `Gray.*` 색 상수를 토큰으로 돌려놨다. 임의의 회색·파랑을 그대로 두면 브랜드 색과 어긋나 보여 오히려 판단을 흐린다. 레이아웃·치수는 아직 시안을 안 봤고 STEP 22 에서 이 파일을 통째로 교체한다. |
