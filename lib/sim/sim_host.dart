@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'sim_controller.dart';
 import 'sim_view.dart';
@@ -31,7 +32,7 @@ class SimHost extends StatefulWidget {
 
 /// 자리 요청 하나.
 class _SlotRequest {
-  _SlotRequest(this.key, this.priority, this.radius);
+  _SlotRequest(this.key, this.priority, this.radius, this.viewport);
 
   final GlobalKey key;
 
@@ -39,37 +40,62 @@ class _SlotRequest {
   final int priority;
 
   final double radius;
+
+  /// 이 자리가 스크롤 안에 있으면 그 스크롤 영역. 밖으로 나간 부분은 잘라 낸다.
+  final BuildContext? viewport;
 }
 
-class SimHostState extends State<SimHost> {
+class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
   final SimController controller = SimController();
   final List<_SlotRequest> _requests = [];
 
   Rect? _rect;
+  Rect? _clip;
   double _radius = 0;
   bool _updateScheduled = false;
+
+  /// 자리를 매 프레임 다시 잰다.
+  ///
+  /// [SimSlot] 의 `LayoutBuilder` 는 **크기**가 바뀔 때만 다시 불린다. 채팅처럼
+  /// 스크롤로 **위치만** 움직이는 경우에는 안 불려서 WebView 가 옛 자리에 남는다.
+  /// 그래서 프레임마다 재 보고, 값이 달라졌을 때만 옮긴다.
+  late final Ticker _ticker = createTicker(_onFrame)..start();
 
   /// 지금 시뮬레이터가 화면에 보이는가.
   bool get isVisible => _rect != null;
 
   @override
+  void initState() {
+    super.initState();
+    _ticker; // late final 을 깨워 티커를 시작시킨다.
+  }
+
+  @override
   void dispose() {
+    _ticker.dispose();
     controller.dispose();
     super.dispose();
   }
 
+  void _onFrame(Duration _) {
+    if (_requests.isEmpty) return;
+    _applyWinner();
+  }
+
   /// [SimSlot] 이 자리를 요청하거나 갱신한다.
-  void putSlot(GlobalKey key, int priority, double radius) {
+  void putSlot(GlobalKey key, int priority, double radius, BuildContext? viewport) {
     final i = _requests.indexWhere((r) => r.key == key);
     if (i >= 0) {
       final existing = _requests[i];
-      if (existing.priority == priority && existing.radius == radius) {
+      if (existing.priority == priority &&
+          existing.radius == radius &&
+          existing.viewport == viewport) {
         _scheduleUpdate();
         return;
       }
-      _requests[i] = _SlotRequest(key, priority, radius);
+      _requests[i] = _SlotRequest(key, priority, radius, viewport);
     } else {
-      _requests.add(_SlotRequest(key, priority, radius));
+      _requests.add(_SlotRequest(key, priority, radius, viewport));
     }
     _scheduleUpdate();
   }
@@ -91,7 +117,12 @@ class SimHostState extends State<SimHost> {
 
   void _applyWinner() {
     if (_requests.isEmpty) {
-      if (_rect != null) setState(() => _rect = null);
+      if (_rect != null) {
+        setState(() {
+          _rect = null;
+          _clip = null;
+        });
+      }
       return;
     }
 
@@ -100,35 +131,69 @@ class SimHostState extends State<SimHost> {
 
     final box = winner.key.currentContext?.findRenderObject() as RenderBox?;
     final hostBox = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize || hostBox == null) return;
+    if (box == null || !box.hasSize || !box.attached) return;
+    if (hostBox == null || !hostBox.hasSize) return;
 
     final origin = box.localToGlobal(Offset.zero, ancestor: hostBox);
     final next = origin & box.size;
 
-    if (next != _rect || winner.radius != _radius) {
+    // 스크롤 안의 자리면 그 영역 밖으로 나간 부분은 보이지 않아야 한다.
+    Rect? clip;
+    final viewportBox = winner.viewport?.findRenderObject();
+    if (viewportBox is RenderBox && viewportBox.hasSize && viewportBox.attached) {
+      clip = viewportBox.localToGlobal(Offset.zero, ancestor: hostBox) &
+          viewportBox.size;
+    }
+
+    if (next != _rect || clip != _clip || winner.radius != _radius) {
       setState(() {
         _rect = next;
+        _clip = clip;
         _radius = winner.radius;
       });
     }
   }
 
+  /// 자리가 없을 때 치워 두는 곳. 없애지 않는다 — 없애면 wasm 을 다시 올려야 한다.
+  static const Rect _offscreen = Rect.fromLTWH(-10000, 0, 320, 240);
+
   @override
   Widget build(BuildContext context) {
-    // 자리가 없으면 화면 밖으로. 살아는 있어야 wasm 을 다시 안 올린다.
-    final rect = _rect ?? const Rect.fromLTWH(-10000, 0, 320, 240);
+    final rect = _rect ?? _offscreen;
+
+    // 보이는 창 = 자리 ∩ 스크롤 영역. 창은 잘라 내는 틀이고, WebView 자체는
+    // 늘 자리 크기 그대로라 스크롤 중에 리사이즈되지 않는다.
+    var view = rect;
+    var window = _clip == null ? rect : rect.intersect(_clip!);
+    if (window.width <= 0 || window.height <= 0) {
+      window = _offscreen;
+      view = _offscreen;
+    }
 
     return Stack(
       children: [
         widget.child,
         Positioned.fromRect(
-          rect: rect,
-          child: IgnorePointer(
-            // 자리를 차지하지 않을 때는 터치를 먹지 않게.
-            ignoring: _rect == null,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(_radius),
-              child: SimView(controller: controller),
+          rect: window,
+          child: ClipRect(
+            child: IgnorePointer(
+              // 자리를 차지하지 않을 때는 터치를 먹지 않게.
+              ignoring: _rect == null,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: view.left - window.left,
+                    top: view.top - window.top,
+                    width: view.width,
+                    height: view.height,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(_radius),
+                      child: SimView(controller: controller),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -180,7 +245,13 @@ class _SimSlotState extends State<SimSlot> {
     }
   }
 
-  void _register() => _host?.putSlot(_key, widget.priority, widget.borderRadius);
+  void _register() => _host?.putSlot(
+        _key,
+        widget.priority,
+        widget.borderRadius,
+        // 스크롤 안이면 그 뷰포트를 함께 넘긴다 — 밖으로 나간 부분을 잘라 내려고.
+        Scrollable.maybeOf(context)?.context,
+      );
 
   @override
   void dispose() {

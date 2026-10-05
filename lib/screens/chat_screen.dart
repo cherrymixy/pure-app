@@ -144,13 +144,15 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     if (!mounted) return;
 
-    final result = await gen.generate(GenerationRequest(
-      signature: robot.signature,
-      text: text,
-      frames: frames,
-      chipId: chipId,
-      situation: _situationForChip(chipId),
-    ));
+    final result = await gen.generate(
+      GenerationRequest(
+        signature: robot.signature,
+        text: text,
+        frames: frames,
+        chipId: chipId,
+        situation: _situationForChip(chipId),
+      ),
+    );
 
     if (!mounted) return;
     if (result == null) {
@@ -190,12 +192,14 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _delayed = false);
     _scrollToEnd();
 
-    final result = await gen.generate(GenerationRequest(
-      signature: robot.signature,
-      text: _lastUserText,
-      feedback: feedback,
-      previousSpec: previous,
-    ));
+    final result = await gen.generate(
+      GenerationRequest(
+        signature: robot.signature,
+        text: _lastUserText,
+        feedback: feedback,
+        previousSpec: previous,
+      ),
+    );
 
     if (!mounted) return;
     if (result == null) {
@@ -211,19 +215,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Situation? _situationForChip(String? chipId) => switch (chipId) {
-        'cameHome' => Situation.comesHome,
-        'tired' => Situation.tired,
-        'startled' => Situation.startled,
-        _ => null,
-      };
+    'cameHome' => Situation.comesHome,
+    'tired' => Situation.tired,
+    'startled' => Situation.startled,
+    _ => null,
+  };
 
   // ---------------------------------------------------------------- 재생
 
-  Future<void> _play(
-    MotionSpec spec, {
-    bool capture = false,
-    String? messageId,
-  }) async {
+  Future<void> _play(MotionSpec spec, {bool capture = false, String? messageId}) async {
     setState(() {
       _activeSpecId = spec.id;
       _playingSpecId = spec.id;
@@ -247,8 +247,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!capture || messageId == null) return;
 
     // 재생이 한 바퀴 돈 뒤의 모습을 라이브러리 썸네일로 쓴다.
-    final waitMs =
-        (MotionEngine.estimateSeconds(spec.recipe) * 1000).clamp(600, 4000).round();
+    final waitMs = (MotionEngine.estimateSeconds(spec.recipe) * 1000)
+        .clamp(600, 4000)
+        .round();
     await Future<void>.delayed(Duration(milliseconds: waitMs));
     if (!mounted) return;
     await _captureThumbnail(messageId, spec);
@@ -315,13 +316,10 @@ class _ChatScreenState extends State<ChatScreen> {
           onAction: () => Navigator.pushNamed(context, AppRoutes.library),
         );
       case SaveRejected(:final reason):
-        showGrayToast(
-          context,
-          switch (reason) {
-            SaveRejectReason.nameTaken => S.errorNameTaken,
-            _ => S.errorNameEmpty,
-          },
-        );
+        showGrayToast(context, switch (reason) {
+          SaveRejectReason.nameTaken => S.errorNameTaken,
+          _ => S.errorNameEmpty,
+        });
     }
   }
 
@@ -366,58 +364,47 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgCanvas,
       resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                const PureBackBar(),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      // 시안 `Chat` (480:2458): 좌우 여백 25, 말풍선 사이 20.
-                      ListView.separated(
-                        controller: _scroll,
-                        // 아래는 입력창(59 + 바깥 여백 8 + 홈 인디케이터) 만큼 비운다.
-                        padding: EdgeInsets.fromLTRB(
-                          AppSpacing.x24,
-                          AppSpacing.x24,
-                          AppSpacing.x24,
-                          MediaQuery.paddingOf(context).bottom + 91,
-                        ),
-                        itemCount: messages.length + 1,
-                        // 인사말 다음만 36, 나머지는 20.
-                        separatorBuilder: (_, i) =>
-                            SizedBox(height: i == 0 ? 36 : AppSpacing.x20),
-                        itemBuilder: (context, i) => i == 0
-                            ? _Greeting(name: name)
-                            : _buildMessage(messages[i - 1]),
-                      ),
-                      _TopFade(visible: _scrolled),
-                    ],
+      // 시안 06-6: `Chat` 영역의 아래 끝이 입력창 위와 정확히 맞닿는다.
+      // 그래서 입력창을 띄워 얹지 않고 Column 의 마지막에 둔다 — 말풍선(과 그 위에
+      // 올라타는 시뮬레이터)이 입력창을 덮지 않는다.
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const PureBackBar(),
+            Expanded(
+              child: Stack(
+                children: [
+                  // 시안 `Chat` (480:2458): 좌우 여백 25, 말풍선 사이 20.
+                  ListView.separated(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.x24,
+                      AppSpacing.x24,
+                      AppSpacing.x24,
+                      AppSpacing.x20,
+                    ),
+                    itemCount: messages.length + 1,
+                    // 인사말 다음만 36, 나머지는 20.
+                    separatorBuilder: (_, i) =>
+                        SizedBox(height: i == 0 ? 36 : AppSpacing.x20),
+                    itemBuilder: (context, i) =>
+                        i == 0 ? _Greeting(name: name) : _buildMessage(messages[i - 1]),
                   ),
-                ),
-              ],
+                  _TopFade(visible: _scrolled),
+                ],
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_playingSpecId != null)
-                  _NowPlayingBar(elapsed: _playElapsed, onStop: _stop),
-                Composer(
-                  key: _composerKey,
-                  controller: _text,
-                  onSend: _onComposerSend,
-                  enabled: true,
-                ),
-              ],
+            if (_playingSpecId != null)
+              _NowPlayingBar(elapsed: _playElapsed, onStop: _stop),
+            Composer(
+              key: _composerKey,
+              controller: _text,
+              onSend: _onComposerSend,
+              enabled: true,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -444,11 +431,8 @@ class _ChatScreenState extends State<ChatScreen> {
           onTap: () => setState(() => _activeSpecId = spec.id),
           onPlay: () => _play(spec),
           onSave: () => _save(spec),
-          onFullscreen: () => Navigator.pushNamed(
-            context,
-            AppRoutes.preview,
-            arguments: spec,
-          ),
+          onFullscreen: () =>
+              Navigator.pushNamed(context, AppRoutes.preview, arguments: spec),
         );
     }
     return Align(alignment: Alignment.centerLeft, child: bubble);
@@ -462,9 +446,9 @@ class _Greeting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        '${fill(S.homeGreetingLine1, {'name': name})}\n${S.homeGreetingLine2}',
-        style: AppTextStyles.homeGreeting,
-      );
+    '${fill(S.homeGreetingLine1, {'name': name})}\n${S.homeGreetingLine2}',
+    style: AppTextStyles.homeGreeting,
+  );
 }
 
 /// 시안 `Top fade` — 위로 스크롤된 말풍선이 상단바 밑으로 사라지게 한다.
@@ -475,26 +459,26 @@ class _TopFade extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Positioned(
-        left: 0,
-        right: 0,
-        top: 0,
-        height: 159.65,
-        child: IgnorePointer(
-          child: AnimatedOpacity(
-            opacity: visible ? 1 : 0,
-            duration: const Duration(milliseconds: 180),
-            child: const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0x80E4E6E9), Color(0x00E4E6E9)],
-                ),
-              ),
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 159.65,
+    child: IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        child: const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x80E4E6E9), Color(0x00E4E6E9)],
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// 사용자 말풍선 — 시안 `Chat Bubble / User Text` · `User Media`.
@@ -516,8 +500,7 @@ class _UserBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (video != null) _UserMediaBubble(video: video),
-          if (video != null && text.isNotEmpty)
-            const SizedBox(height: AppSpacing.x8),
+          if (video != null && text.isNotEmpty) const SizedBox(height: AppSpacing.x8),
           if (text.isNotEmpty)
             Container(
               constraints: BoxConstraints(
@@ -544,7 +527,8 @@ class _UserMediaBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = video.selectedSec.round();
-    final time = '${(s ~/ 60).toString().padLeft(2, '0')}:'
+    final time =
+        '${(s ~/ 60).toString().padLeft(2, '0')}:'
         '${(s % 60).toString().padLeft(2, '0')}';
 
     return Container(
@@ -581,9 +565,7 @@ class _UserMediaBubble extends StatelessWidget {
                 bottom: AppSpacing.x12,
                 child: Text(
                   time,
-                  style: AppTextStyles.labelS.copyWith(
-                    color: AppColors.textOnInverse,
-                  ),
+                  style: AppTextStyles.labelS.copyWith(color: AppColors.textOnInverse),
                 ),
               ),
             ],
@@ -613,16 +595,17 @@ class _NowPlayingBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(23, 0, 23, 10),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, AppSpacing.x8, AppSpacing.x8, AppSpacing.x8),
+        padding: const EdgeInsets.fromLTRB(
+          18,
+          AppSpacing.x8,
+          AppSpacing.x8,
+          AppSpacing.x8,
+        ),
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              offset: Offset(0, 4),
-              blurRadius: 16,
-            ),
+            BoxShadow(color: Color(0x14000000), offset: Offset(0, 4), blurRadius: 16),
           ],
         ),
         child: Row(
@@ -670,9 +653,7 @@ class _NowPlayingBar extends StatelessWidget {
                   ),
                   child: Text(
                     S.actionStop,
-                    style: AppTextStyles.labelS.copyWith(
-                      color: AppColors.textOnInverse,
-                    ),
+                    style: AppTextStyles.labelS.copyWith(color: AppColors.textOnInverse),
                   ),
                 ),
               ),
