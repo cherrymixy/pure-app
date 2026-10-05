@@ -1,0 +1,42 @@
+name: pure_app
+description: "PURE — Motion, made uniquely yours."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 상태 관리
+  provider: ^6.1.5
+
+  # 시뮬레이터 (sim/ 웹 번들을 로컬 서버로 서빙 + 양방향 JS)
+  flutter_inappwebview: ^6.1.5
+
+  # 입력
+  image_picker: ^1.2.3
+  fc_native_video_thumbnail: ^3.0.1
+  speech_to_text: ^7.5.0
+
+  # 저장
+  path_provider: ^2.1.6
+  shared_preferences: ^2.5.5
+
+  # 기타
+  wakelock_plus: ^1.8.1
+  http: ^1.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/sim/

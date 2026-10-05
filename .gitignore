@@ -47,7 +47,9 @@ sim/dist/
 sim/.vite/
 
 # ── sim 빌드 산출물 (scripts/build_sim.sh 로 생성) ──
-assets/sim/
+# 폴더 자체는 유지해야 pubspec 의 assets 선언이 깨지지 않는다
+assets/sim/*
+!assets/sim/.gitkeep
 
 # ── OMC 운영 산출물 (.omc/skills 는 예외) ──
 .omc/*
