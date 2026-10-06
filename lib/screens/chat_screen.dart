@@ -87,6 +87,14 @@ class _ChatScreenState extends State<ChatScreen> {
   /// 지금 답을 기다리는 중인가. 답하면(칩이든 직접 입력이든) 꺼진다.
   bool _asking = false;
 
+  /// 개발용 — 되묻기에 첫 답안으로 자동 응답한다. 시뮬레이터를 탭할 수 없어서 둔다.
+  ///   ./scripts/dev.sh install --dart-define=START_CHIP=cameHome \
+  ///       --dart-define=DEV_AUTO_ANSWER=true --dart-define=DEV_SAVE_SHEET=true
+  static const bool _devAutoAnswer = bool.fromEnvironment('DEV_AUTO_ANSWER');
+
+  /// 개발용 — 답장이 나오면 저장 시트를 바로 연다.
+  static const bool _devSaveSheet = bool.fromEnvironment('DEV_SAVE_SHEET');
+
   static String _flat(String label) => label.replaceAll('\n', ' ');
 
   @override
@@ -156,6 +164,10 @@ class _ChatScreenState extends State<ChatScreen> {
       ],
     );
     _scrollToEnd();
+    if (_devAutoAnswer && mounted) {
+      final first = branch.whenOptions.first;
+      await _answerWhen(first, _flat(first.label));
+    }
   }
 
   Future<void> _onChoice(MessageChoice choice) async {
@@ -196,6 +208,10 @@ class _ChatScreenState extends State<ChatScreen> {
       ],
     );
     _scrollToEnd();
+    if (_devAutoAnswer && mounted) {
+      final first = _branch!.howOptions.first;
+      await _onChoice(MessageChoice(id: first.id, label: _flat(first.label)));
+    }
   }
 
   /// 칩 대신 직접 적거나 말해서 답했다 — 남은 질문은 건너뛰고 바로 만든다.
@@ -250,6 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _activeSpecId = result.spec.id);
     _scrollToEnd();
     await _play(result.spec, capture: true, messageId: pending.id);
+    if (_devSaveSheet && mounted) await _save(result.spec);
   }
 
   void _onSimEvent(SimEvent e) {
@@ -446,6 +463,7 @@ class _ChatScreenState extends State<ChatScreen> {
       spec: spec,
       chatId: chat.currentId ?? '',
       situation: request.situation,
+      kind: request.kind,
     );
     if (!mounted) return;
 

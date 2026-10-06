@@ -71,11 +71,21 @@ abstract final class S {
   static const saveSheetNameLabel = 'Name';
   static const saveSheetHowLabel = 'How should it play?';
   static const saveSheetPlayWithoutAsking = 'Play without asking';
+  /// 시안 `483:19352`.
+  static const saveSheetPlayWithoutAskingHint =
+      'Starts as soon as the condition is met';
   static const saveSheetAskBeforePlaying = 'Ask before playing';
+  /// 시안 `483:19356`.
+  static const saveSheetAskBeforePlayingHint =
+      'Shows a confirmation before it plays';
   static const saveSheetOnlyWhenIAsk = 'Only when I ask';
-  /// `{name}` 자리에 기존 모션 이름.
+  /// `{name}` 은 기존 모션 이름, `{situation}` 은 상황 문구.
+  ///
+  /// 시안(`480:3930`)은 "Saving will replace it." 로 끝나지만 실제로는 지우지
+  /// 않고 "물어보고 재생" 으로 내린다 (부록 D). 뒷문장만 동작에 맞췄다.
   static const saveSheetReplaceWarning =
-      '{name} already plays in this situation. Saving will ask before playing it instead.';
+      '\u201c{name}\u201d already plays when {situation}. '
+      'Saving will ask before playing it instead.';
   static const saveSheetReplaceAction = 'Replace and save';
 
   // 06-8 대화 기록

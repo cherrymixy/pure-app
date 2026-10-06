@@ -51,6 +51,9 @@ enum AppIconName {
   /// `Try again` 칩 안 (13).
   refresh('refresh.svg'),
 
+  /// 저장 시트의 고른 표시 (13).
+  check('check.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

@@ -32,7 +32,7 @@ class SimHost extends StatefulWidget {
 
 /// 자리 요청 하나.
 class _SlotRequest {
-  _SlotRequest(this.key, this.priority, this.radius, this.viewport);
+  _SlotRequest(this.key, this.priority, this.radius, this.viewport, this.route);
 
   final GlobalKey key;
 
@@ -43,6 +43,10 @@ class _SlotRequest {
 
   /// 이 자리가 스크롤 안에 있으면 그 스크롤 영역. 밖으로 나간 부분은 잘라 낸다.
   final BuildContext? viewport;
+
+  /// 이 자리가 올라탄 라우트. 위에 시트나 다이얼로그가 덮이면 자리를 비운다 —
+  /// WebView 는 앱 최상단에 있어서 가만 두면 시트 **위에** 그려진다.
+  final ModalRoute<Object?>? route;
 }
 
 class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
@@ -83,19 +87,26 @@ class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
   }
 
   /// [SimSlot] 이 자리를 요청하거나 갱신한다.
-  void putSlot(GlobalKey key, int priority, double radius, BuildContext? viewport) {
+  void putSlot(
+    GlobalKey key,
+    int priority,
+    double radius,
+    BuildContext? viewport,
+    ModalRoute<Object?>? route,
+  ) {
     final i = _requests.indexWhere((r) => r.key == key);
     if (i >= 0) {
       final existing = _requests[i];
       if (existing.priority == priority &&
           existing.radius == radius &&
-          existing.viewport == viewport) {
+          existing.viewport == viewport &&
+          existing.route == route) {
         _scheduleUpdate();
         return;
       }
-      _requests[i] = _SlotRequest(key, priority, radius, viewport);
+      _requests[i] = _SlotRequest(key, priority, radius, viewport, route);
     } else {
-      _requests.add(_SlotRequest(key, priority, radius, viewport));
+      _requests.add(_SlotRequest(key, priority, radius, viewport, route));
     }
     _scheduleUpdate();
   }
@@ -116,7 +127,10 @@ class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
   }
 
   void _applyWinner() {
-    if (_requests.isEmpty) {
+    // 시트·다이얼로그가 덮인 라우트의 자리는 셈에서 뺀다.
+    final live = _requests.where((r) => r.route?.isCurrent ?? true).toList();
+
+    if (live.isEmpty) {
       if (_rect != null) {
         setState(() {
           _rect = null;
@@ -126,8 +140,8 @@ class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
       return;
     }
 
-    _requests.sort((a, b) => b.priority.compareTo(a.priority));
-    final winner = _requests.first;
+    live.sort((a, b) => b.priority.compareTo(a.priority));
+    final winner = live.first;
 
     final box = winner.key.currentContext?.findRenderObject() as RenderBox?;
     final hostBox = context.findRenderObject() as RenderBox?;
@@ -251,6 +265,7 @@ class _SimSlotState extends State<SimSlot> {
         widget.borderRadius,
         // 스크롤 안이면 그 뷰포트를 함께 넘긴다 — 밖으로 나간 부분을 잘라 내려고.
         Scrollable.maybeOf(context)?.context,
+        ModalRoute.of(context),
       );
 
   @override
