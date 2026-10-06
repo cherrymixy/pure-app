@@ -166,6 +166,14 @@ ExpressionOption expressionFor(Expression v) =>
 MotionSignature applyPersonality(MotionSignature s, PersonalityOption o) =>
     s.copyWith(lively: o.lively, bold: o.bold);
 
+/// 08-1 로봇 화면의 한 줄 — 시안은 세 축을 그대로 잇는다
+/// ("Lively  /  Waits till I'm near  /  Quick & bouncy").
+String signatureLine(MotionSignature s) => [
+      personalityFor(s).label,
+      relationshipFor(s.relationship).label,
+      expressionFor(s.expression).label,
+    ].join('  /  ');
+
 /// 상단 로봇 상태 줄의 요약 — "LIVELY, BOUNCY" (PRD §4 공통).
 String signatureSummary(MotionSignature s) {
   final p = personalityFor(s).label.split(' ').first.toUpperCase();

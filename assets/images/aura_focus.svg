@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle id="Aura" cx="24" cy="24" r="24" fill="url(#paint0_radial_0_78)"/>
+<defs>
+<radialGradient id="paint0_radial_0_78" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(24 24) scale(24)">
+<stop stop-color="#CCD1DB"/>
+<stop offset="1" stop-color="#808A99"/>
+</radialGradient>
+</defs>
+</svg>

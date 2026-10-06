@@ -125,3 +125,6 @@
 - STEP 22 모션 시그니처(05-1~05-4) 번역: 뒤로 30.69 + Skip / 진행 막대 349.83×6.14(채움 #3d414d) / 로봇 카드 폭 전체 261 radius 29.19 / 답 칩 Wrap / 질문 Title/L 두 줄 / 큰 마이크 66. 선택지가 제목+설명 카드에서 칩으로 바뀌었고 설명 문구는 화면에서 사라졌다. 질문 문구도 시안대로 ("If Purebot were a person…" 등). 편집 모드는 진행 막대와 Skip 이 없다.
 - 시안에서 답 칩이 질문 **위**에 있다. 질문이 큰 마이크 바로 위에 오는 구성이라 그대로 옮겼다.
 - SimSlot 에 borderRadius 를 넘기지 않으면 WebView 가 각지게 나온다 — 바깥 ClipRRect 는 SimHost 가 그리는 WebView 에 먹지 않는다. 시그니처/라이브러리/상세/채팅 네 군데 모두 라운드를 함께 넘기도록 고쳤다.
+- STEP 22 로봇 화면(08-1) 번역: 로봇 카드 250(radius 28, 이름/모델/상태 배지/Wi-Fi·전원 두 줄 + 오른쪽에 걸친 로봇 사진) / 모드 카드(radius 24) / 모션 시그니처 행 / 메뉴 넷(Activity history·My robots·Firmware·Help). 카드 사이 12.
+- 모드 카드(Trigger now + Family/Partner/Focus)는 PRD 에 없는 개념이라 **보이기만 하는 더미**로 넣었다 (승아 결정). data/robot_modes.dart 에 이름·설명·칩·아우라만 있고 탭해도 아무 일도 없다.
+- 08-1 의 시그니처 한 줄은 대문자 요약(LIVELY, BOUNCY) 대신 세 축을 그대로 잇는다 — signatureLine(). 상단바 요약용 signatureSummary 는 그대로 둔다.

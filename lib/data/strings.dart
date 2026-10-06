@@ -145,6 +145,13 @@ abstract final class S {
   static const robotConnected = 'Connected';
   static const robotMotionSignature = 'Motion signature';
   static const robotActivityHistory = 'Activity history';
+  // 08-1 (시안 `488:4707` 외).
+  static const robotTriggerNow = 'Trigger now';
+  static const robotHelp = 'Help with this robot';
+  /// `{name}` / `{time}` / `{how}` — 메뉴에 보이는 마지막 활동 한 줄.
+  static const robotLastActivity = 'Last: {name} / {time} ({how})';
+  /// `{version}`.
+  static const robotVersionReady = 'Version {version} is ready';
   static const robotMyRobots = 'My robots';
   static const robotPreviewOnPurebot = 'Preview on Purebot';
   static const robotResetToDefault = 'Reset to default';

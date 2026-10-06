@@ -79,6 +79,29 @@ enum AppIconName {
   /// 05 큰 마이크 버튼 안 (25.8 × 34.07).
   micLarge('mic_lg.svg'),
 
+  // ---- 로봇 (08) ----
+
+  /// 로봇 카드 아래 네트워크 (14).
+  wifi('wifi.svg'),
+
+  /// 로봇 카드 아래 전원 (14).
+  plug('plug.svg'),
+
+  /// 목록 행 오른쪽 꺾쇠 (18).
+  chevron('chevron.svg'),
+
+  /// `My robots` (18).
+  robot('robot.svg'),
+
+  /// `Firmware update` (18).
+  download('download.svg'),
+
+  /// `Help with this robot` (18).
+  help('help.svg'),
+
+  /// `Activity history` (20).
+  board('board.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),
