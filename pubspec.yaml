@@ -43,13 +43,15 @@ flutter:
 
   fonts:
     # Pretendard (OFL 1.1). 시안의 Google Sans Flex 대신 쓴다 — 한글까지 한 파일로
-    # 덮고 라이선스가 자유롭다. 설계에 쓰이는 굵기는 400·500 둘뿐이라 둘만 넣는다.
+    # 덮고 라이선스가 자유롭다. 시안이 쓰는 굵기는 400·500·600 셋이다.
     - family: Pretendard
       fonts:
         - asset: assets/fonts/Pretendard-Regular.otf
           weight: 400
         - asset: assets/fonts/Pretendard-Medium.otf
           weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
 
   assets:
     - assets/images/

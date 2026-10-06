@@ -17,6 +17,10 @@ abstract final class AppTextStyles {
   /// Pretendard 가 라틴·한글을 모두 덮으므로 폴백은 시스템 기본만 둔다.
   static const List<String> fontFamilyFallback = <String>[];
 
+  /// 시안이 몇 군데서 쓰는 SemiBold. 토큰에는 없고 그 자리에서만 얹는다
+  /// (08-1 모드 이름, 08-5 활동 이름 등).
+  static const FontWeight semiBold = FontWeight.w600;
+
   static TextStyle _base({
     required double size,
     required double height,

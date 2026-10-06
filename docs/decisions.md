@@ -134,3 +134,5 @@
 - STEP 22 마이·알림(09·10) 번역: 09-1 프로필 카드(아바타 56 + Edit 알약) + 메뉴 두 묶음 + Version, 09-2 토글 셋 + From PURE 그룹, 09-3 계정(Email·Signed in with / Change password / Log out·Delete), 09-4 Help 아코디언·Terms, 10-1 알림(아이콘 원 40 + 제목·시각·안 읽음 점 7, 날짜 그룹, Mark all read).
 - robot_screen 의 _MenuCard/_MenuRow 를 widgets/pure_list.dart 의 PureCard/PureRow 로 승격했다 (로봇·마이가 같은 행을 쓴다). trailing 슬롯을 더해 스위치도 넣는다.
 - 알림 토글 키를 시안에 맞춰 바꿨다: firmware → robotOffline, autoReactions 추가 (data/seed.dart).
+- [sim 봉인 해제 1회, 승아 승인] 시뮬레이터 무대를 흰색으로. 시안(05·07·08)의 로봇은 흰 바탕 위에 떠 있는데 _ref 웹에서 가져온 무대는 검정 + 마젠타·바이올렛 림이라 카드와 톤이 어긋났다. STAGE #ffffff / 안개 제거 / Hemisphere 위아래 대비(#ffffff↔#b9c4c4) / key 2.8 / 림은 세이지 0.22 / 격자와 바닥면 제거(그림자 판을 깔면 그림자 카메라 밖이 통째로 회색이 된다). window.pure 계약은 손대지 않았고 smoke 13건 그대로 통과.
+- Pretendard SemiBold(600) 추가 (승아 승인). 시안이 08-1 모드 이름과 08-5 활동 이름에 16/15 SemiBold 를 쓴다. AppTextStyles.semiBold 로 그 자리에서만 얹는다.

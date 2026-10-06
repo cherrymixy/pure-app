@@ -16,12 +16,16 @@ export type { CameraView };
 /** MuJoCo 는 Z-up, Three.js 는 Y-up. 루트 그룹을 눕혀서 맞춘다. */
 const MJ_TO_WORLD = -Math.PI / 2;
 
-/** 스테이지 색 — 페이지 배경(--color-bg)보다 살짝 밝게 두어 캔버스 경계가 보이게 한다. */
-const STAGE = '#0a0a0d';
-/** 브랜드 마젠타 (--color-accent) */
-const ACCENT = '#f0126b';
-/** 앰비언트 글로우의 바이올렛 */
-const VIOLET = '#785cff';
+/**
+ * 스테이지 색 — 앱의 `bg/surface` 와 같은 흰색.
+ *
+ * _ref 웹은 어두운 무대에 마젠타·바이올렛 림을 썼지만, PURE 앱 시안(05·07·08)의
+ * 로봇은 **흰 배경 위에** 놓인다. 말풍선·카드와 이어 붙도록 무대를 흰색으로 둔다
+ * (승아 승인, STEP 22).
+ */
+const STAGE = '#ffffff';
+/** 브랜드 세이지 (`bg/brand`). 흰 무대에서는 림을 이 색으로 아주 약하게만 쓴다. */
+const ACCENT = '#789ba2';
 
 const GEOM = {
   PLANE: 0,
@@ -92,7 +96,7 @@ export class LampViewer {
 
     // PURE 다크 팔레트에 맞춘 스테이지 색 (globals.css 의 --color-bg 계열).
     this.scene.background = new THREE.Color(STAGE);
-    this.scene.fog = new THREE.Fog(STAGE, 2.2, 6);
+    // 흰 무대에서는 안개가 로봇을 흐리게만 만든다 — 쓰지 않는다.
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.01, 50);
     this.root.rotation.x = MJ_TO_WORLD;
@@ -117,30 +121,19 @@ export class LampViewer {
   // ---------------------------------------------------------------- 장면 구성
 
   private addLights(): void {
-    this.scene.add(new THREE.HemisphereLight('#9aa2c2', '#141419', 2.1));
+    // 위아래 밝기를 벌려 흰 몸통에도 음영이 생기게 한다.
+    this.scene.add(new THREE.HemisphereLight('#ffffff', '#b9c4c4', 1.15));
 
-    const key = new THREE.DirectionalLight('#fff2e0', 3.0);
+    const key = new THREE.DirectionalLight('#ffffff', 2.8);
     key.position.set(1.2, 2.0, 1.1);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
-    key.shadow.camera.near = 0.4;
-    key.shadow.camera.far = 6;
-    const d = 1.0;
-    key.shadow.camera.left = -d;
-    key.shadow.camera.right = d;
-    key.shadow.camera.top = d;
-    key.shadow.camera.bottom = -d;
-    key.shadow.bias = -0.0012;
+    // 받을 바닥이 없으니 그림자 맵도 띄우지 않는다.
+    key.castShadow = false;
     this.scene.add(key);
 
-    // 브랜드 림 — 홈 화면의 앰비언트 글로우(마젠타 + 바이올렛)와 같은 색을 쓴다.
-    const rim = new THREE.DirectionalLight(ACCENT, 0.55);
+    // 브랜드 림 — 흰 무대에서는 윤곽만 살짝 잡아 준다.
+    const rim = new THREE.DirectionalLight(ACCENT, 0.22);
     rim.position.set(-1.4, 0.9, -1.2);
     this.scene.add(rim);
-
-    const fill = new THREE.DirectionalLight(VIOLET, 0.35);
-    fill.position.set(1.5, 0.6, -1.4);
-    this.scene.add(fill);
 
     // 램프가 실제로 쏘는 빔 — 전등갓 바디를 따라다닌다. 빔이 없는 로봇은 건너뛴다.
     const spec = this.lamp.robot.beam;
@@ -161,19 +154,11 @@ export class LampViewer {
   }
 
   private addFloor(): void {
-    const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(3.2, 64),
-      new THREE.MeshStandardMaterial({ color: '#141419', roughness: 0.9, metalness: 0.04 }),
-    );
-    floor.receiveShadow = true;
-    this.root.add(floor);
-
-    const grid = new THREE.GridHelper(4, 40, 0x33333a, 0x212127);
-    grid.rotation.x = Math.PI / 2;
-    grid.position.z = 0.001;
-    (grid.material as THREE.Material).opacity = 0.45;
-    (grid.material as THREE.Material).transparent = true;
-    this.root.add(grid);
+    // 시안(05·07·08)의 로봇은 **흰 바탕 위에 그냥 떠 있다** — 바닥면도 격자도 없다.
+    // 그림자를 받을 판을 깔아 봤지만, 그림자 카메라가 덮지 못하는 바깥까지 통째로
+    // 어둡게 칠해져 회색 지평선이 생겼다. 바닥은 그리지 않는다.
+    //
+    // 물리 바닥은 MuJoCo 모델이 들고 있으므로 로봇은 그대로 서 있는다.
   }
 
   private geomColor(geomId: number): THREE.Color {

@@ -365,8 +365,10 @@ class _ModeRow extends StatelessWidget {
                   children: [
                     Text(
                       mode.name,
-                      // 시안은 16 SemiBold 지만 Pretendard 를 400·500 만 넣어 뒀다.
-                      style: AppTextStyles.bodyLStrong,
+                      // 시안 16 SemiBold.
+                      style: AppTextStyles.bodyLStrong.copyWith(
+                        fontWeight: AppTextStyles.semiBold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -1166,9 +1168,9 @@ class _ActivityRow extends StatelessWidget {
               children: [
                 Text(
                   item.motionName,
-                  // 시안 15 SemiBold — Pretendard 는 500 까지만 넣어 뒀다.
+                  // 시안 15 SemiBold.
                   style: AppTextStyles.bodyM.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTextStyles.semiBold,
                   ),
                 ),
                 const SizedBox(height: 3),
