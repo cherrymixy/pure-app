@@ -88,8 +88,8 @@ enum PureChipSize {
   /// 시안 기본. 높이 43 · 좌우 16.
   m(height: 43, paddingX: AppSpacing.x16),
 
-  /// 작은 변형. 필터처럼 여러 개를 늘어놓을 때.
-  s(height: 34, paddingX: AppSpacing.x12);
+  /// 시안 Chip S. 높이 32 · 좌우 12 — 08-5 활동 기록 필터가 쓴다.
+  s(height: 32, paddingX: AppSpacing.x12);
 
   const PureChipSize({required this.height, required this.paddingX});
 

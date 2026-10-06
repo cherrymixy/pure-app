@@ -102,6 +102,9 @@ enum AppIconName {
   /// `Activity history` (20).
   board('board.svg'),
 
+  /// `Add a robot` 행 (18).
+  plusRow('plus_row.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

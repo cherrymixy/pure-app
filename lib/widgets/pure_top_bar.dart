@@ -104,9 +104,9 @@ class PureRoundButton extends StatelessWidget {
 /// 뒤로가기 상단바 — Figma `Top Bar / Back` (`453:4186`).
 ///
 /// 시안 값: 높이 56 · 왼쪽 패딩 12 · 오른쪽 16 · 버튼 44 안에 아이콘 24.
-/// 오른쪽은 비워 둔다 (시안에 아무것도 없다).
+/// [title] 을 주면 `Back + Title` 변형 — 제목이 가운데에 17 Medium 으로 온다.
 class PureBackBar extends StatelessWidget {
-  const PureBackBar({super.key, this.onBack, this.trailing});
+  const PureBackBar({super.key, this.onBack, this.trailing, this.title});
 
   /// 없으면 그냥 pop.
   final VoidCallback? onBack;
@@ -114,26 +114,42 @@ class PureBackBar extends StatelessWidget {
   /// 시안에는 없지만 화면이 필요로 하면 오른쪽에 붙인다.
   final Widget? trailing;
 
+  final String? title;
+
   @override
   Widget build(BuildContext context) => SizedBox(
         height: 56,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 12, right: AppSpacing.x16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              InkResponse(
-                onTap: onBack ?? () => Navigator.maybePop(context),
-                radius: 24,
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Center(child: AppIcon(AppIconName.arrowBack, size: 24)),
+        child: Stack(
+          children: [
+            if (title != null)
+              Center(
+                child: Text(
+                  title!,
+                  // 시안 17 Medium — Title/S 와 굵기가 같고 크기만 작다.
+                  style: AppTextStyles.titleS.copyWith(fontSize: 17),
                 ),
               ),
-              ?trailing,
-            ],
-          ),
+            Padding(
+              padding: const EdgeInsets.only(left: 12, right: AppSpacing.x16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkResponse(
+                    onTap: onBack ?? () => Navigator.maybePop(context),
+                    radius: 24,
+                    child: const SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Center(
+                        child: AppIcon(AppIconName.arrowBack, size: 24),
+                      ),
+                    ),
+                  ),
+                  ?trailing,
+                ],
+              ),
+            ),
+          ],
         ),
       );
 }

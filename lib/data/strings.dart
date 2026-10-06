@@ -144,6 +144,20 @@ abstract final class S {
   static const robotTitle = 'Robot';
   static const robotConnected = 'Connected';
   static const robotMotionSignature = 'Motion signature';
+  // 08-2 (시안 `481:3484` 외).
+  static const robotSignatureTitle = 'Its motion signature';
+  static const robotSignatureBody =
+      'Tap a part to change it. Your saved motions keep their own style.';
+  static const robotSignaturePersonality = 'Personality';
+  static const robotSignatureRelationship = 'Relationship';
+  static const robotSignatureMotion = 'Motion';
+  static const robotSignatureSound = 'Sound';
+  /// 시안 더미 — 소리는 아직 없는 기능이다.
+  static const robotSignatureSoundValue = 'One soft cue';
+  /// `{lively}` / `{bold}`.
+  static const robotSignaturePersonalityValue = 'Lively {lively} / Bold {bold}';
+  /// `{motion}` / `{richness}`.
+  static const robotSignatureMotionValue = '{motion} / {richness}';
   static const robotActivityHistory = 'Activity history';
   // 08-1 (시안 `488:4707` 외).
   static const robotTriggerNow = 'Trigger now';
@@ -153,15 +167,62 @@ abstract final class S {
   /// `{version}`.
   static const robotVersionReady = 'Version {version} is ready';
   static const robotMyRobots = 'My robots';
+  // 08-3 (시안 `481:3613` 외).
+  static const robotAddRobot = 'Add a robot';
+  /// `{name}`.
+  static const robotRemoveFromAccount = 'Remove {name} from account';
+  static const robotRemoveTitle = 'Remove {name}?';
+  static const robotRemoveBody =
+      'It\u2019ll be disconnected from your account. Your motions stay in Library, '
+      'and you can add it again anytime.';
+  static const robotRemoveAction = 'Remove';
+  /// `{model}` / `{status}`.
+  static const robotDeviceLine = '{model}  /  {status}';
   static const robotPreviewOnPurebot = 'Preview on Purebot';
   static const robotResetToDefault = 'Reset to default';
   static const robotResetConfirm = 'Reset the motion signature to its default?';
   static const robotUpdateNow = 'Update now';
+  // 08-4 (시안 `481:3836` 외).
+  static const robotFirmwareTitle = 'Firmware update';
+  /// `{version}`.
+  static const robotFirmwareVersion = 'Version {version}';
+  /// `{current}` / `{size}`.
+  static const robotFirmwareMeta = 'Current version {current}  /  {size}';
+  static const robotFirmwareSize = '12 MB';
+  static const robotFirmwareWhatsNew = 'What\u2019s new';
+  /// 시안 `481:3839` 의 세 줄.
+  static const List<String> robotFirmwareNotes = [
+    'Smoother arm movement at low speed',
+    'Sound cues play in sync with motion',
+    'Faster reconnect after Wi-Fi drops',
+  ];
+  static const robotFirmwareHint =
+      'Keep Purebot plugged in and close to your phone. It can\u2019t move while '
+      'updating (about 3 min).';
+  /// `{name}`.
+  static const robotFirmwareUpdating = 'Updating {name}\u2026';
+  /// `{percent}` / `{left}`.
+  static const robotFirmwareProgress = '{percent}%  /  about {left} left';
+  static const robotFirmwareDontUnplug =
+      'Don\u2019t unplug Purebot or close the app.';
+  /// `{name}`.
+  static const robotFirmwareUpToDate = '{name} is up to date';
+  /// `{version}`.
+  static const robotFirmwareChecked = 'Version {version}  /  Checked just now';
+  static const robotFirmwareUpToDateNote =
+      'Updates install automatically when Wi-Fi is idle.';
   static const robotFirmwareReady = 'Firmware {version} ready';
   static const robotUpdateDone = 'Purebot is up to date';
   static const robotActivityAll = 'All';
   static const robotActivityAuto = 'Auto';
   static const robotActivityByYou = 'By you';
+  // 08-5 (시안 `481:4287` 외).
+  static const activityYesterday = 'Yesterday';
+  static const activityKept = 'Kept for 30 days';
+  /// `{situation}` — 자동으로 돈 것.
+  static const activityAutoLine = 'Auto / {situation}';
+  static const activityAutoPlain = 'Auto';
+  static const activityByYouLine = 'By you / from Library';
 
   // ---------------------------------------------------------------- 09 마이
   static const meTitle = 'Me';

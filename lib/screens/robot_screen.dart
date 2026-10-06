@@ -5,22 +5,28 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../app_routes.dart';
+import '../data/robot_devices.dart';
 import '../data/robot_modes.dart';
 import '../data/seed.dart';
 import '../data/signature_options.dart';
 import '../data/strings.dart';
 import '../models/activity_item.dart';
 import '../models/recipe.dart';
+import '../providers/library_provider.dart';
 import '../providers/robot_provider.dart';
 import '../repositories/data_repository.dart';
 import '../services/motion_engine.dart';
+import '../sim/sim_controller.dart';
 import '../sim/sim_host.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
-import '../widgets/app_shell.dart';
 import '../widgets/gray_box.dart';
+import '../widgets/pure_button.dart';
+import '../widgets/pure_chip.dart';
+import '../widgets/pure_empty.dart';
+import '../widgets/pure_sheet.dart';
 import '../widgets/pure_sidebar.dart';
 import '../widgets/pure_top_bar.dart';
 import 'signature_screen.dart';
@@ -444,8 +450,11 @@ class _MenuRow extends StatelessWidget {
     this.iconSize = 18,
     this.value,
     this.trailingText,
+    this.trailingIcon,
     this.valueIsBrand = false,
     this.labelOnTop = false,
+    this.showChevron = true,
+    this.danger = false,
   });
 
   final String label;
@@ -459,17 +468,28 @@ class _MenuRow extends StatelessWidget {
   /// 꺾쇠 왼쪽 작은 글자 (로봇 수 등).
   final String? trailingText;
 
+  /// 꺾쇠 대신 보여 줄 아이콘 (고른 기기의 체크 등).
+  final AppIconName? trailingIcon;
+
   final bool valueIsBrand;
 
   /// 모션 시그니처 행처럼 작은 라벨이 위, 값이 아래인가.
   final bool labelOnTop;
+
+  final bool showChevron;
+
+  /// 되돌릴 수 없는 행동 — 글자가 빨개진다.
+  final bool danger;
 
   @override
   Widget build(BuildContext context) {
     final small = AppTextStyles.bodyS.copyWith(
       color: valueIsBrand ? AppColors.textBrand : AppColors.textSecondary,
     );
-    final big = AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w500);
+    final big = AppTextStyles.bodyM.copyWith(
+      fontWeight: FontWeight.w500,
+      color: danger ? AppColors.textError : AppColors.textPrimary,
+    );
 
     return InkWell(
       onTap: onTap,
@@ -518,12 +538,18 @@ class _MenuRow extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(width: AppSpacing.x12),
-            const AppIcon(
-              AppIconName.chevron,
-              size: 18,
-              color: AppColors.iconSecondary,
-            ),
+            if (trailingIcon != null) ...[
+              const SizedBox(width: AppSpacing.x12),
+              AppIcon(trailingIcon!, size: 18),
+            ],
+            if (showChevron) ...[
+              const SizedBox(width: AppSpacing.x12),
+              const AppIcon(
+                AppIconName.chevron,
+                size: 18,
+                color: AppColors.iconSecondary,
+              ),
+            ],
           ],
         ),
       ),
@@ -532,6 +558,10 @@ class _MenuRow extends StatelessWidget {
 }
 
 /// 08-2 시그니처 재설정 — 항목을 탭하면 05 편집 모드로 간다.
+/// 08-2 모션 시그니처 — Figma `481:3480`.
+///
+/// 시안 값: 큰 제목 26 Medium / 설명 15 / 네 줄 카드(radius 20) /
+/// 아래 "Reset to default" 와 Primary 버튼. 줄을 누르면 05 편집 모드로 간다.
 class SignatureResetScreen extends StatelessWidget {
   const SignatureResetScreen({super.key});
 
@@ -553,6 +583,18 @@ class SignatureResetScreen extends StatelessWidget {
     } catch (_) {}
   }
 
+  Future<void> _reset(BuildContext context) async {
+    final ok = await showPureConfirm(
+      context,
+      title: S.robotResetConfirm,
+      confirmLabel: S.robotResetToDefault,
+    );
+    if (!ok || !context.mounted) return;
+    await context.read<RobotProvider>().resetSignature();
+    if (!context.mounted) return;
+    showGrayToast(context, S.signatureSaved);
+  }
+
   @override
   Widget build(BuildContext context) {
     final robot = context.watch<RobotProvider>();
@@ -564,90 +606,209 @@ class SignatureResetScreen extends StatelessWidget {
           arguments: SignatureArgs(edit: true, focus: step),
         );
 
-    return AppShell(
-      title: S.robotMotionSignature,
-      onBack: () => Navigator.pop(context),
-      child: ListView(
-        children: [
-          const SizedBox(height: 8),
-          _Card(children: [
-            ListTile(
-              title: const Text('Personality'),
-              subtitle: Text(personalityFor(s).label),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => edit(SignatureStep.personality),
-            ),
-            ListTile(
-              title: const Text('How it comes to you'),
-              subtitle: Text(relationshipFor(s.relationship).label),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => edit(SignatureStep.relationship),
-            ),
-            ListTile(
-              title: const Text('How it moves'),
-              subtitle: Text(expressionFor(s.expression).label),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => edit(SignatureStep.expression),
-            ),
-          ]),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _preview(context),
-                  icon: const Icon(Icons.play_arrow, size: 18),
-                  label: const Text(S.robotPreviewOnPurebot),
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PureBackBar(title: S.robotMotionSignature),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.x24,
+                  18,
+                  AppSpacing.x24,
+                  0,
                 ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () async {
-                    final ok = await showGrayConfirm(
-                      context,
-                      title: S.robotResetConfirm,
-                      confirmLabel: S.robotResetToDefault,
-                      destructive: false,
-                    );
-                    if (!ok || !context.mounted) return;
-                    await context.read<RobotProvider>().resetSignature();
-                    if (!context.mounted) return;
-                    showGrayToast(context, S.signatureSaved);
-                  },
-                  child: const Text(S.robotResetToDefault),
-                ),
-              ],
+                children: [
+                  Text(
+                    S.robotSignatureTitle,
+                    style: AppTextStyles.titleL.copyWith(fontSize: 26),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    S.robotSignatureBody,
+                    style: AppTextStyles.bodyM.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.x24),
+                  _MenuCard(
+                    rows: [
+                      _MenuRow(
+                        labelOnTop: true,
+                        label: S.robotSignaturePersonality,
+                        value: fill(S.robotSignaturePersonalityValue, {
+                          'lively': s.lively,
+                          'bold': s.bold,
+                        }),
+                        onTap: () => edit(SignatureStep.personality),
+                      ),
+                      _MenuRow(
+                        labelOnTop: true,
+                        label: S.robotSignatureRelationship,
+                        value: relationshipFor(s.relationship).label,
+                        onTap: () => edit(SignatureStep.relationship),
+                      ),
+                      _MenuRow(
+                        labelOnTop: true,
+                        label: S.robotSignatureMotion,
+                        value: fill(S.robotSignatureMotionValue, {
+                          'motion': expressionFor(s.expression).label,
+                          'richness': s.richness,
+                        }),
+                        onTap: () => edit(SignatureStep.expression),
+                      ),
+                      // 소리는 아직 없는 기능이다 — 시안에 있어 자리만 둔다.
+                      _MenuRow(
+                        labelOnTop: true,
+                        label: S.robotSignatureSound,
+                        value: S.robotSignatureSoundValue,
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.x24,
+                0,
+                AppSpacing.x24,
+                18,
+              ),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () => _reset(context),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        S.robotResetToDefault,
+                        style: AppTextStyles.labelM.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: PureButton(
+                      label: S.robotPreviewOnPurebot,
+                      onPressed: () => _preview(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 08-3 로봇 목록 — 시드 더미.
+/// 08-3 내 로봇 — Figma `481:3575`.
+///
+/// 시안 값: 기기 목록 카드 / `Add a robot` 카드 / 빨간 "Remove … from account".
+/// 전부 더미다 — 전시에는 로봇이 하나뿐이다.
 class RobotListScreen extends StatelessWidget {
   const RobotListScreen({super.key});
 
+  Future<void> _remove(BuildContext context, String name) async {
+    final ok = await showPureConfirm(
+      context,
+      title: fill(S.robotRemoveTitle, {'name': name}),
+      body: S.robotRemoveBody,
+      confirmLabel: S.robotRemoveAction,
+    );
+    if (!ok || !context.mounted) return;
+    // 더미 — 실제로 지우지는 않는다.
+    showGrayToast(context, S.toastDeleted);
+  }
+
   @override
-  Widget build(BuildContext context) => AppShell(
-        title: S.robotMyRobots,
-        onBack: () => Navigator.pop(context),
-        child: ListView(
+  Widget build(BuildContext context) {
+    final primary = kRobotDevices.first;
+
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 8),
-            _Card(children: [
-              for (final r in kRobotSeedInfo.myRobots)
-                ListTile(
-                  title: Text(r),
-                  trailing: const Icon(Icons.check, size: 18, color: Gray.accent),
+            PureBackBar(title: S.robotMyRobots),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.x24,
+                  18,
+                  AppSpacing.x24,
+                  AppSpacing.x24,
                 ),
-            ]),
+                children: [
+                  _MenuCard(
+                    rows: [
+                      for (final d in kRobotDevices)
+                        _MenuRow(
+                          icon: AppIconName.robot,
+                          label: d.name,
+                          value: fill(S.robotDeviceLine, {
+                            'model': d.model,
+                            'status': d.status,
+                          }),
+                          valueIsBrand: d.connected,
+                          trailingIcon:
+                              d.connected ? AppIconName.check : null,
+                          showChevron: false,
+                          onTap: () {},
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.x16),
+                  _MenuCard(
+                    rows: [
+                      _MenuRow(
+                        icon: AppIconName.plusRow,
+                        label: S.robotAddRobot,
+                        // 더미 — 기기를 더 붙일 일은 없다.
+                        onTap: () => showGrayToast(context, S.robotAddRobot),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+                  _MenuCard(
+                    rows: [
+                      _MenuRow(
+                        label: fill(S.robotRemoveFromAccount, {
+                          'name': primary.name,
+                        }),
+                        danger: true,
+                        showChevron: false,
+                        onTap: () => _remove(context, primary.name),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-      );
+      ),
+    );
+  }
 }
 
-/// 08-4 펌웨어 — Update now 를 누르면 더미 진행 후 완료 토스트.
+/// 08-4 펌웨어 — Figma `481:3832`(준비) · `481:3881`(진행) · `481:4161`(최신).
+///
+/// 시안 값: 버전 카드(흰색 radius 24, 패딩 22, 간격 8) / 안내 한 단락 /
+/// 아래 Primary 버튼. 전시용이라 실제로 내려받지는 않고 진행 막대만 돈다.
 class FirmwareScreen extends StatefulWidget {
   const FirmwareScreen({super.key});
 
@@ -657,6 +818,7 @@ class FirmwareScreen extends StatefulWidget {
 
 class _FirmwareScreenState extends State<FirmwareScreen> {
   double? _progress;
+  bool _done = false;
   Timer? _timer;
 
   @override
@@ -672,7 +834,10 @@ class _FirmwareScreenState extends State<FirmwareScreen> {
       final next = (_progress ?? 0) + 0.04;
       if (next >= 1) {
         t.cancel();
-        setState(() => _progress = null);
+        setState(() {
+          _progress = null;
+          _done = true;
+        });
         showGrayToast(context, S.robotUpdateDone);
         return;
       }
@@ -683,41 +848,228 @@ class _FirmwareScreenState extends State<FirmwareScreen> {
   @override
   Widget build(BuildContext context) {
     const info = kRobotSeedInfo;
+    final robot = context.watch<RobotProvider>();
     final running = _progress != null;
 
-    return AppShell(
-      title: 'Firmware',
-      onBack: () => Navigator.pop(context),
-      child: ListView(
-        children: [
-          const SizedBox(height: 8),
-          _Card(children: [
-            _Row(label: 'Current', value: info.firmwareCurrent),
-            _Row(label: 'Available', value: info.firmwareAvailable),
-          ]),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: running
-                ? Column(
-                    children: [
-                      LinearProgressIndicator(value: _progress),
-                      const SizedBox(height: 8),
-                      Text('${((_progress ?? 0) * 100).round()}%',
-                          style: const TextStyle(fontSize: 12, color: Gray.dim)),
-                    ],
-                  )
-                : FilledButton(
-                    onPressed: _start,
-                    child: const Text(S.robotUpdateNow),
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PureBackBar(title: S.robotFirmwareTitle),
+            Expanded(
+              child: running
+                  ? _Updating(progress: _progress!, name: robot.robot.name)
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.x24,
+                        18,
+                        AppSpacing.x24,
+                        AppSpacing.x24,
+                      ),
+                      children: [
+                        if (_done)
+                          _UpToDateCard(
+                            name: robot.robot.name,
+                            version: info.firmwareAvailable,
+                          )
+                        else
+                          _VersionCard(
+                            version: info.firmwareAvailable,
+                            current: info.firmwareCurrent,
+                          ),
+                        const SizedBox(height: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            _done
+                                ? S.robotFirmwareUpToDateNote
+                                : S.robotFirmwareHint,
+                            style: AppTextStyles.bodyS.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+            if (!running)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.x24,
+                  0,
+                  AppSpacing.x24,
+                  18,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: PureButton(
+                    label: S.robotUpdateNow,
+                    // 최신이면 누를 것이 없다 (시안 08-4.up_to_date).
+                    onPressed: _done ? null : _start,
                   ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 시안 `Version` (`481:3836`).
+class _VersionCard extends StatelessWidget {
+  const _VersionCard({required this.version, required this.current});
+
+  final String version;
+  final String current;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              fill(S.robotFirmwareVersion, {'version': version}),
+              style: AppTextStyles.titleM.copyWith(fontSize: 24),
+            ),
+            const SizedBox(height: AppSpacing.x8),
+            Text(
+              fill(S.robotFirmwareMeta, {
+                'current': current,
+                'size': S.robotFirmwareSize,
+              }),
+              style: AppTextStyles.bodyS.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.x8),
+            Text(
+              S.robotFirmwareWhatsNew,
+              style: AppTextStyles.labelM.copyWith(height: 22 / 14),
+            ),
+            for (final note in S.robotFirmwareNotes)
+              Text(
+                '\u2022 $note',
+                style: AppTextStyles.labelM.copyWith(
+                  fontWeight: FontWeight.w400,
+                  height: 22 / 14,
+                ),
+              ),
+          ],
+        ),
+      );
+}
+
+/// 시안 `08-4.up_to_date` (`481:4161`).
+class _UpToDateCard extends StatelessWidget {
+  const _UpToDateCard({required this.name, required this.version});
+
+  final String name;
+  final String version;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              fill(S.robotFirmwareUpToDate, {'name': name}),
+              style: AppTextStyles.titleM.copyWith(fontSize: 24),
+            ),
+            const SizedBox(height: AppSpacing.x8),
+            Text(
+              fill(S.robotFirmwareChecked, {'version': version}),
+              style: AppTextStyles.bodyS.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+/// 시안 `08-4.updating` (`481:3881`) — 가운데 문구 + 진행 막대 + 바닥 안내.
+class _Updating extends StatelessWidget {
+  const _Updating({required this.progress, required this.name});
+
+  final double progress;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (progress * 100).round();
+    final left = progress > 0.5 ? '1 min' : '2 min';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x24),
+      child: Column(
+        children: [
+          const Spacer(flex: 3),
+          Text(
+            fill(S.robotFirmwareUpdating, {'name': name}),
+            textAlign: TextAlign.center,
+            style: AppTextStyles.titleM.copyWith(fontSize: 24),
           ),
+          const SizedBox(height: AppSpacing.x24),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: SizedBox(
+              height: 6,
+              child: Stack(
+                children: [
+                  Container(color: AppColors.bgSurface),
+                  FractionallySizedBox(
+                    widthFactor: progress.clamp(0, 1),
+                    child: Container(color: AppColors.bgBrand),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.x12),
+          Text(
+            fill(S.robotFirmwareProgress, {
+              'percent': percent,
+              'left': left,
+            }),
+            style: AppTextStyles.bodyS.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const Spacer(flex: 4),
+          Text(
+            S.robotFirmwareDontUnplug,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyS.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 }
 
-/// 08-5 행동 기록 — All / Auto / By you.
+/// 08-5 활동 기록 — Figma `481:4269`.
+///
+/// 시안 값: 뒤로 + 제목 17 Medium / 필터 칩 S(32) / 날짜별 그룹 카드(radius 20) /
+/// 항목은 시각 60 + 이름·설명 + 재생 36. 맨 아래 "Kept for 30 days".
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
 
@@ -727,107 +1079,255 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   ActivityTrigger? _filter;
+  String? _playingId;
+  StreamSubscription<SimEvent>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _sub = SimHost.controllerOf(context).events.listen((e) {
+        if (e is SimEnded && mounted) setState(() => _playingId = null);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  /// 저장된 모션이면 다시 틀어 준다. 없으면 아무 일도 하지 않는다.
+  Future<void> _replay(ActivityItem a) async {
+    final motion = context
+        .read<LibraryProvider>()
+        .all
+        .where((m) => m.name == a.motionName)
+        .firstOrNull;
+    if (motion == null) {
+      showGrayToast(context, S.errorSimFailed);
+      return;
+    }
+    setState(() => _playingId = a.id);
+    try {
+      final sim = SimHost.controllerOf(context);
+      await sim.playRecipe(motion.spec.recipe.toJson());
+      await sim.setFace(motion.spec.face);
+    } catch (_) {
+      if (mounted) setState(() => _playingId = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final all = context.read<DataRepository>().activity;
+    final all = context.watch<DataRepository>().activity;
     final items =
         _filter == null ? all : all.where((a) => a.trigger == _filter).toList();
 
-    return AppShell(
-      title: S.robotActivityHistory,
-      onBack: () => Navigator.pop(context),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-            child: Row(
-              children: [
-                for (final f in <(String, ActivityTrigger?)>[
-                  (S.robotActivityAll, null),
-                  (S.robotActivityAuto, ActivityTrigger.auto),
-                  (S.robotActivityByYou, ActivityTrigger.byYou),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GrayChip(
-                      label: f.$1,
-                      selected: _filter == f.$2,
-                      onTap: () => setState(() => _filter = f.$2),
+    // 오늘 / 어제 / 그 전으로 묶는다 (시안은 두 덩어리를 보여 준다).
+    final now = DateTime.now();
+    final groups = <String, List<ActivityItem>>{};
+    for (final a in items) {
+      groups.putIfAbsent(_groupLabel(a.at, now), () => []).add(a);
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PureBackBar(title: S.robotActivityHistory),
+            // 시안: 상단바 아래 14, 칩 32, 그 아래 24.
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 32,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x24),
+                children: [
+                  for (final f in <(String, ActivityTrigger?)>[
+                    (S.robotActivityAll, null),
+                    (S.robotActivityAuto, ActivityTrigger.auto),
+                    (S.robotActivityByYou, ActivityTrigger.byYou),
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.x8),
+                      child: PureChip(
+                        label: f.$1,
+                        size: PureChipSize.s,
+                        state: _filter == f.$2
+                            ? PureChipState.selected
+                            : PureChipState.normal,
+                        onTap: () => setState(() => _filter = f.$2),
+                      ),
                     ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.x24),
+            Expanded(
+              child: items.isEmpty
+                  ? const PureNoResults(
+                      title: 'Nothing yet',
+                      body: 'Purebot has not moved today.',
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.x24,
+                        0,
+                        AppSpacing.x24,
+                        AppSpacing.x24,
+                      ),
+                      children: [
+                        for (final entry in groups.entries) ...[
+                          Text(
+                            entry.key,
+                            style: AppTextStyles.labelS.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.x12),
+                          _ActivityGroup(
+                            items: entry.value,
+                            playingId: _playingId,
+                            onReplay: _replay,
+                          ),
+                          const SizedBox(height: AppSpacing.x12),
+                        ],
+                        Text(
+                          S.activityKept,
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _groupLabel(DateTime t, DateTime now) {
+    final day = DateTime(t.year, t.month, t.day);
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = today.difference(day).inDays;
+    if (diff <= 0) return S.chatHistoryToday;
+    if (diff == 1) return S.activityYesterday;
+    return S.chatHistoryEarlier;
+  }
+}
+
+/// 날짜 한 덩어리 — 흰 카드 radius 20, 위아래 4.
+class _ActivityGroup extends StatelessWidget {
+  const _ActivityGroup({
+    required this.items,
+    required this.playingId,
+    required this.onReplay,
+  });
+
+  final List<ActivityItem> items;
+  final String? playingId;
+  final void Function(ActivityItem) onReplay;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        clipBehavior: Clip.antiAlias,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.x4),
+        child: Column(
+          children: [
+            for (final a in items)
+              _ActivityRow(
+                item: a,
+                playing: playingId == a.id,
+                onReplay: () => onReplay(a),
+              ),
+          ],
+        ),
+      );
+}
+
+/// 항목 한 줄 — 좌우 16 / 위아래 14, 간격 12, 시각 폭 60, 재생 36.
+class _ActivityRow extends StatelessWidget {
+  const _ActivityRow({
+    required this.item,
+    required this.playing,
+    required this.onReplay,
+  });
+
+  final ActivityItem item;
+  final bool playing;
+  final VoidCallback onReplay;
+
+  @override
+  Widget build(BuildContext context) {
+    final small = AppTextStyles.caption.copyWith(
+      fontSize: 12,
+      color: AppColors.textSecondary,
+    );
+
+    final line = item.trigger == ActivityTrigger.auto
+        ? (item.situationLabel == null
+            ? S.activityAutoPlain
+            : fill(S.activityAutoLine, {'situation': item.situationLabel}))
+        : S.activityByYouLine;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x16,
+        vertical: 14,
+      ),
+      child: Row(
+        children: [
+          SizedBox(width: 60, child: Text(_clock(item.at), style: small)),
+          const SizedBox(width: AppSpacing.x12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.motionName,
+                  // 시안 15 SemiBold — Pretendard 는 500 까지만 넣어 뒀다.
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w500,
                   ),
+                ),
+                const SizedBox(height: 3),
+                Text(line, style: small),
               ],
             ),
           ),
-          Expanded(
-            child: items.isEmpty
-                ? const GrayEmptyState(title: 'Nothing yet', body: '')
-                : ListView(
-                    children: [
-                      for (final a in items)
-                        ListTile(
-                          leading: Icon(
-                            a.trigger == ActivityTrigger.auto
-                                ? Icons.bolt
-                                : Icons.touch_app_outlined,
-                            size: 18,
-                            color: a.trigger == ActivityTrigger.auto
-                                ? Gray.accent
-                                : Gray.dim,
-                          ),
-                          title: Text(a.motionName),
-                          subtitle: Text(
-                            [
-                              if (a.situationLabel != null) a.situationLabel!,
-                              _ago(a.at),
-                            ].join(' · '),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                    ],
-                  ),
+          const SizedBox(width: AppSpacing.x12),
+          Material(
+            color: AppColors.bgSurfaceMuted,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onReplay,
+              child: SizedBox(
+                width: 36,
+                height: 36,
+                child: Center(
+                  child: playing
+                      ? const Icon(Icons.stop, size: 16)
+                      : const AppIcon(AppIconName.playThumb, size: 16),
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-
-  static String _ago(DateTime t) {
-    final d = DateTime.now().difference(t);
-    if (d.inMinutes < 60) return '${d.inMinutes}m ago';
-    if (d.inHours < 24) return '${d.inHours}h ago';
-    return '${d.inDays}d ago';
-  }
-}
-
-// ------------------------------------------------------------------ 공용 조각
-
-class _Card extends StatelessWidget {
-  const _Card({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: Gray.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Gray.line),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(children: children),
-      );
-}
-
-class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-        dense: true,
-        title: Text(label, style: const TextStyle(fontSize: 14)),
-        trailing: Text(value, style: const TextStyle(fontSize: 13, color: Gray.dim)),
-      );
 }
