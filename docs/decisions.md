@@ -138,3 +138,9 @@
 - Pretendard SemiBold(600) 추가 (승아 승인). 시안이 08-1 모드 이름과 08-5 활동 이름에 16/15 SemiBold 를 쓴다. AppTextStyles.semiBold 로 그 자리에서만 얹는다.
 - STEP 22 마지막 둘 번역: 대화 기록(06-8, 검정 New 알약 + 그룹 간격 22 + 카드 radius 18 + 저장 배지), 전체 화면 미리보기(06-4.full_screen_preview, bg/canvas 바탕 + 닫기 24 + Loop 알약(세이지 21%) + 354 정사각 + 스크러버 4 + 흰 버튼 56). 미리보기 배경이 검정에서 bg/canvas 로 바뀌었다.
 - STEP 22(컴포넌트·화면 번역) 완료. 00·05·06·07·08·09·10·M 전부 Figma 값으로 옮겼고 회색박스 셸(AppShell)은 main.dart 의 DemoModeToggle 만 남겨 두고 화면에서는 전부 빠졌다.
+- 생성을 3단 폴백으로 (승아 결정): OpenAI → 로컬 모델(Ollama) → 데모. 앞의 것이 어떤 이유로든 실패하면 다음으로 내려가고, 취소만 그대로 던진다. 크레딧이 떨어진 지금도 진짜 생성이 화면까지 온다.
+- OllamaClient 추가. OpenAI 와 같은 프롬프트·스키마를 쓰고 엔드포인트(/api/chat)·format 위치·응답 모양만 다르다. 받아 둔 모델이 텍스트 전용이라 영상 프레임이 붙은 요청은 unsupported 로 돌려보내 데모가 받는다.
+- 작은 모델은 reasoning 에 판단 과정을, name 에 식별자를 적는다. OllamaClient 에서만 지침을 덧댄다. **예문은 넣지 않는다** — 넣었더니 모델이 그 문장을 그대로 베껴 상황과 안 맞는 설명이 나왔다.
+- 모델 비교: qwen3:8b 7~10초/문구 좋음, qwen3:4b 4~5초/문구 거칢. 기본은 8b, OLLAMA_MODEL 로 바꾼다.
+- iOS 는 평문 http 를 막는다. Info.plist 에 NSAllowsLocalNetworking 만 켰다 — 로컬 네트워크만 열리고 인터넷은 그대로 HTTPS 강제라 OpenAI 호출에는 영향이 없다.
+- 실기기에서 쓰려면 맥에서 OLLAMA_HOST=0.0.0.0 으로 띄우고 앱에 맥의 LAN 주소를 넣어야 한다. 같은 Wi-Fi 필수.

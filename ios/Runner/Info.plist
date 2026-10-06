@@ -74,5 +74,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<!-- 맥에서 도는 Ollama(http://localhost:11434)를 부르기 위한 예외.
+	     로컬 네트워크의 평문만 열고 인터넷은 그대로 HTTPS 를 강제한다 —
+	     OpenAI 호출(https)에는 영향이 없다. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

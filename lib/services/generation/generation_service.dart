@@ -4,6 +4,7 @@ import '../../models/motion_spec.dart';
 import '../motion_engine.dart';
 import 'demo_client.dart';
 import 'generation_client.dart';
+import 'ollama_client.dart';
 import 'openai_client.dart';
 
 /// 생성의 **정책** 계층.
@@ -17,12 +18,19 @@ import 'openai_client.dart';
 class GenerationService {
   GenerationService({
     GenerationClient? primary,
+    GenerationClient? secondary,
     GenerationClient? fallback,
     this.forceDemo = false,
   })  : _primary = primary ?? OpenAIClient(),
+        _secondary = secondary ?? OllamaClient(),
         _fallback = fallback ?? DemoClient();
 
   final GenerationClient _primary;
+
+  /// 1차가 안 될 때 한 번 더 시도하는 곳 — 맥에서 도는 로컬 모델 (승아 결정).
+  /// 주소가 없으면 `isAvailable` 이 false 라 그냥 건너뛴다.
+  final GenerationClient _secondary;
+
   final GenerationClient _fallback;
 
   /// 강제 데모 모드 (로봇 이름 5번 탭). 설정에서 읽어 넣는다.
@@ -35,6 +43,10 @@ class GenerationService {
 
   /// 1차 클라이언트를 쓸 수 있는 상태인가. 화면의 데모 배지에 쓴다.
   bool get canUseOpenAI => _primary.isAvailable && !forceDemo;
+
+  /// 진짜 생성을 시도할 곳이 하나라도 있는가.
+  bool get canGenerate =>
+      !forceDemo && (_primary.isAvailable || _secondary.isAvailable);
 
   /// 진행 중인 요청을 취소한다 (생성 중 새 전송 — PRD §6-6).
   void cancelInFlight() {
@@ -55,20 +67,31 @@ class GenerationService {
     _inFlight = token;
 
     try {
-      GenerationResult result;
-      if (canUseOpenAI) {
-        try {
-          result = await _primary.generate(request, cancel: token, onDelay: onDelay);
-        } on GenerationException catch (e) {
-          if (e.failure == GenerationFailure.cancelled) rethrow;
-          // 키 문제·네트워크·타임아웃·깨진 응답 — 전부 데모로 간다.
-          result = await _fallback.generate(request, cancel: token);
-        } catch (_) {
-          result = await _fallback.generate(request, cancel: token);
+      /*
+       * 3단 폴백 (승아 결정):
+       *   OpenAI → 로컬 모델(Ollama) → 데모
+       * 앞의 것이 무슨 이유로든 실패하면 다음으로 내려간다. 취소만 그대로 던진다.
+       * 셋 다 못 쓰면 데모가 받으므로 이 함수는 끝내 실패하지 않는다 (규칙 11).
+       */
+      GenerationResult? result;
+      if (!forceDemo) {
+        for (final client in [_primary, _secondary]) {
+          if (!client.isAvailable) continue;
+          try {
+            result = await client.generate(
+              request,
+              cancel: token,
+              onDelay: onDelay,
+            );
+            break;
+          } on GenerationException catch (e) {
+            if (e.failure == GenerationFailure.cancelled) rethrow;
+          } catch (_) {
+            // 다음 후보로.
+          }
         }
-      } else {
-        result = await _fallback.generate(request, cancel: token);
       }
+      result ??= await _fallback.generate(request, cancel: token);
 
       token.throwIfCancelled();
       return _finish(result, request);
@@ -130,5 +153,7 @@ class GenerationService {
     cancelInFlight();
     final primary = _primary;
     if (primary is OpenAIClient) primary.dispose();
+    final secondary = _secondary;
+    if (secondary is OllamaClient) secondary.dispose();
   }
 }

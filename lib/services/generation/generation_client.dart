@@ -58,7 +58,7 @@ class GenerationRequest {
 }
 
 /// 어디서 나온 결과인가. 화면이 "데모 모드" 표시를 고르는 데 쓴다.
-enum GenerationSource { openai, demo, fake }
+enum GenerationSource { openai, ollama, demo, fake }
 
 /// 생성 결과.
 class GenerationResult {
@@ -100,6 +100,10 @@ enum GenerationFailure {
 
   /// 사용자가 새로 전송해서 취소됐다.
   cancelled,
+
+  /// 이 클라이언트가 다룰 수 없는 요청 (예: 영상 프레임을 못 보는 모델).
+  /// 다음 폴백으로 넘기라는 뜻이다.
+  unsupported,
 
   /// 그 밖.
   unknown,

@@ -173,7 +173,7 @@ class OpenAIClient implements GenerationClient {
 
   /// 텍스트만이면 문자열, 프레임이 있으면 블록 배열.
   Object _userContent(GenerationRequest r) {
-    final preamble = _userText(r);
+    final preamble = userText(r);
     if (!r.hasFrames) return preamble;
     return [
       {'type': 'text', 'text': preamble},
@@ -185,7 +185,8 @@ class OpenAIClient implements GenerationClient {
     ];
   }
 
-  String _userText(GenerationRequest r) {
+  /// 사용자 쪽 문장. Ollama 클라이언트도 같은 것을 쓴다.
+  static String userText(GenerationRequest r) {
     final b = StringBuffer();
     b.writeln(describeSignature(r.signature));
     b.writeln();
@@ -299,6 +300,11 @@ RULES FOR YOUR ANSWER
   /// `strict: true` 는 minimum/maximum/maxItems 를 **지원하지 않는다**. 범위는 전부
   /// 파싱 후 `motion_engine.validateRecipe` 가 강제한다. 또 모든 property 가
   /// required 여야 해서 선택 필드 face 는 `["string","null"]` 로 선언한다.
+  /// 스키마 본문만. Ollama 는 `format` 에 이것을 그대로 받는다.
+  static Map<String, Object?> get jsonSchema =>
+      ((responseFormat['json_schema']! as Map)['schema']! as Map)
+          .cast<String, Object?>();
+
   static Map<String, Object?> get responseFormat => {
         'type': 'json_schema',
         'json_schema': {

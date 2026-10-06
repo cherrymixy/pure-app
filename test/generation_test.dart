@@ -206,6 +206,76 @@ void main() {
       expect(r.spec.name.length, lessThanOrEqualTo(20));
     });
 
+    test('1차가 죽으면 2차(로컬 모델)가 받는다', () async {
+      final openai = FakeClient(failWith: GenerationFailure.network);
+      final ollama = FakeClient(name: 'From Ollama');
+      final service = GenerationService(
+        primary: openai,
+        secondary: ollama,
+        fallback: DemoClient(thinkingDelay: Duration.zero),
+      );
+
+      final r = await service.generate(GenerationRequest(
+        signature: const MotionSignature(),
+      ));
+
+      expect(openai.callCount, greaterThan(0));
+      expect(ollama.callCount, 1);
+      expect(r.spec.name, 'From Ollama');
+    });
+
+    test('1차·2차가 다 죽으면 데모가 받는다', () async {
+      final openai = FakeClient(failWith: GenerationFailure.network);
+      final ollama = FakeClient(failWith: GenerationFailure.unsupported);
+      final service = GenerationService(
+        primary: openai,
+        secondary: ollama,
+        fallback: DemoClient(thinkingDelay: Duration.zero),
+      );
+
+      final r = await service.generate(GenerationRequest(
+        signature: const MotionSignature(),
+      ));
+
+      expect(ollama.callCount, 1);
+      expect(r.source, GenerationSource.demo);
+    });
+
+    test('2차를 쓸 수 없으면 건너뛴다', () async {
+      final openai = FakeClient(failWith: GenerationFailure.network);
+      final ollama = FakeClient()..available = false;
+      final service = GenerationService(
+        primary: openai,
+        secondary: ollama,
+        fallback: DemoClient(thinkingDelay: Duration.zero),
+      );
+
+      final r = await service.generate(GenerationRequest(
+        signature: const MotionSignature(),
+      ));
+
+      expect(ollama.callCount, 0, reason: '주소가 없으면 부르지 않는다');
+      expect(r.source, GenerationSource.demo);
+    });
+
+    test('강제 데모 모드면 1차도 2차도 부르지 않는다', () async {
+      final openai = FakeClient();
+      final ollama = FakeClient();
+      final service = GenerationService(
+        primary: openai,
+        secondary: ollama,
+        fallback: DemoClient(thinkingDelay: Duration.zero),
+        forceDemo: true,
+      );
+
+      await service.generate(GenerationRequest(
+        signature: const MotionSignature(),
+      ));
+
+      expect(openai.callCount, 0);
+      expect(ollama.callCount, 0);
+    });
+
     test('강제 데모 모드면 1차를 아예 부르지 않는다', () async {
       final fake = FakeClient();
       final service = GenerationService(
