@@ -81,7 +81,10 @@ enum PureButtonVariant {
   subtle(AppColors.bgSurfaceMuted, AppColors.textPrimary),
 
   /// 배경 없이 글자만.
-  text(Colors.transparent, AppColors.textLink);
+  text(Colors.transparent, AppColors.textLink),
+
+  /// 되돌릴 수 없는 행동 (삭제). 시안 `Button/Delete` (`481:3106`).
+  danger(AppColors.statusError, AppColors.textOnBrand);
 
   const PureButtonVariant(this.background, this.foreground);
 

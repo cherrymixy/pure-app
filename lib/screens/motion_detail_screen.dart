@@ -18,6 +18,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/gray_box.dart';
 import '../widgets/pure_button.dart';
+import '../widgets/pure_sheet.dart';
 import '../widgets/pure_top_bar.dart';
 
 /// 07-2 모션 상세 — Figma `481:2984`.
@@ -48,6 +49,11 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
         if (e is SimEnded && mounted) setState(() => _playing = false);
       });
       _play();
+      if (_devSheet == 'delete') {
+        _delete();
+      } else if (_devSheet == 'rename') {
+        _rename();
+      }
     });
   }
 
@@ -85,60 +91,17 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
     final motion = _motion;
     if (motion == null) return;
     final library = context.read<LibraryProvider>();
-    final controller = TextEditingController(text: motion.name);
 
-    final next = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: SafeArea(
-          child: StatefulBuilder(
-            builder: (context, setSheet) {
-              final text = controller.text.trim();
-              final changed = text != motion.name;
-              final available = library.isNameAvailable(text, ignoreId: motion.id);
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(S.actionRename,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: controller,
-                      autofocus: true,
-                      maxLength: LibraryProvider.nameMax,
-                      onChanged: (_) => setSheet(() {}),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        border: const OutlineInputBorder(),
-                        errorText: text.isEmpty
-                            ? S.errorNameEmpty
-                            : (available ? null : S.errorNameTaken),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      // 바뀌었고 쓸 수 있는 이름일 때만 저장이 열린다.
-                      onPressed: changed && available && text.isNotEmpty
-                          ? () => Navigator.pop(context, text)
-                          : null,
-                      child: const Text(S.actionSave),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(S.actionCancel),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+    final next = await showPureRename(
+      context,
+      title: S.renameTitle,
+      initial: motion.name,
+      maxLength: LibraryProvider.nameMax,
+      validate: (text) => text.isEmpty
+          ? S.errorNameEmpty
+          : (library.isNameAvailable(text, ignoreId: motion.id)
+              ? null
+              : S.errorNameTaken),
     );
 
     if (next == null || !mounted) return;
@@ -154,15 +117,19 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
     final motion = _motion;
     if (motion == null) return;
     final situation = motion.situation;
-    final warn = motion.kind == ReactionKind.auto && situation != null
-        ? fill(S.deleteMotionAutoWarning,
-            {'situation': situationLabel(situation).toLowerCase()})
-        : null;
 
-    final ok = await showGrayConfirm(
+    // 자동 재생이던 모션은 무엇이 멈추는지 함께 알린다.
+    final body = motion.kind == ReactionKind.auto && situation != null
+        ? fill(S.deleteMotionBodyAuto, {
+            'situation': situationLabel(situation).toLowerCase(),
+          })
+        : S.deleteMotionBody;
+
+    final ok = await showPureConfirm(
       context,
-      title: S.deleteMotionTitle,
-      body: warn,
+      title: fill(S.deleteMotionTitle, {'name': motion.name}),
+      body: body,
+      confirmLabel: S.actionDelete,
     );
     if (!ok || !mounted) return;
 
@@ -287,24 +254,28 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
     );
   }
 
-  /// 더보기 — 시안에 메뉴 모양이 따로 없어 시트로 띄운다 (07-2 rename / delete).
+  /// 더보기 — 시안에 메뉴 모양이 따로 없어 같은 시트 틀로 띄운다.
   Future<void> _openMenu() async {
     final choice = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text(S.actionRename),
-              onTap: () => Navigator.pop(context, 'rename'),
-            ),
-            ListTile(
-              title: const Text(S.actionDelete),
-              onTap: () => Navigator.pop(context, 'delete'),
-            ),
-          ],
-        ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.bgOverlay,
+      builder: (context) => PureSheet(
+        children: [
+          const SizedBox(height: 22),
+          PureButton(
+            label: S.actionRename,
+            variant: PureButtonVariant.subtle,
+            onPressed: () => Navigator.pop(context, 'rename'),
+          ),
+          const SizedBox(height: 6),
+          PureButton(
+            label: S.actionDelete,
+            variant: PureButtonVariant.danger,
+            onPressed: () => Navigator.pop(context, 'delete'),
+          ),
+        ],
       ),
     );
     if (choice == null || !mounted) return;
@@ -314,6 +285,9 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
       await _delete();
     }
   }
+
+  /// 개발용 — 열자마자 시트를 띄운다. `--dart-define=DEV_SHEET=delete`
+  static const String _devSheet = String.fromEnvironment('DEV_SHEET');
 
   /// 시안은 "Saved Oct 4" 꼴로 쓴다.
   static const List<String> _months = [

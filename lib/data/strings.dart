@@ -204,10 +204,16 @@ abstract final class S {
   static const permBody = 'Turn it on in Settings to use this.';
 
   // ---------------------------------------------------------------- 삭제 확인
-  static const deleteMotionTitle = 'Delete this motion?';
-  /// `{situation}`.
-  static const deleteMotionAutoWarning =
-      'It will stop playing automatically when {situation}.';
+  /// `{name}` — 시안 07-2 `481:3102`.
+  static const deleteMotionTitle = 'Delete \u201c{name}\u201d?';
+  /// `{situation}` — 시안 07-2 `481:3104`.
+  static const deleteMotionBodyAuto =
+      'Purebot will stop playing it when {situation}. This can\u2019t be undone.';
+  static const deleteMotionBody = 'This can\u2019t be undone.';
+
+  // ---------------------------------------------------------------- 이름 변경
+  /// 시안 07-2 `481:3402`.
+  static const renameTitle = 'Rename motion';
 }
 
 /// `{key}` 자리표시자를 채운다.
