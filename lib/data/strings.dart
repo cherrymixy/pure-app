@@ -127,6 +127,11 @@ abstract final class S {
   /// `{count}`.
   static const libraryEditedTimes = 'Edited {count} times';
   static const libraryEditInChat = 'Edit in chat';
+  // 07-2 상세의 반응 카드 (시안 `481:2999`).
+  static const libraryTriggerAuto = 'Plays automatically when';
+  static const libraryTriggerAsk = 'Asks before playing when';
+  static const libraryTriggerHint =
+      'To change this, edit the motion in chat and save it again.';
   /// `{count}`.
   static const librarySearchResults = '{count} results';
 

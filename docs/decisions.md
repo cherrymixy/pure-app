@@ -117,3 +117,4 @@
 - 홈 칩은 고르는 즉시 전송한다 (승아 결정). 입력창에 채워 두고 한 번 더 누르게 하지 않는다.
 - 로봇이 말하기 전에는 늘 점 세 개가 구른다 (승아 결정). 생성 답장은 pending 자리가 맡되 최소 700ms 는 보이게 하고, 되묻는 질문은 메시지로 바로 꽂히므로 화면이 잠깐 띄운다.
 - STEP 22 라이브러리(07-1) 번역: 햄버거+제목(Title/L)+돋보기 44 원형 / 필터 칩 3 (간격 8) / 목록 좌우 24·간격 10·그룹 사이 18. 카드는 흰 바탕 radius 20, 썸네일 60(radius 14, bg/inverse + overlay + 작은 재생), 오른쪽 재생 36(bg/surface-muted). 자동은 번개 12 + 세이지 "When …", 수동은 "Manual". PureMenuBar·PureRoundButton 을 공용으로 뺐다.
+- STEP 22 모션 상세(07-2) 번역: 뒤로가기 + 더보기 44 흰 원 / 미리보기 354×300(radius 28, neutral/900, 재생 중엔 시뮬레이터) / 제목 Title/L / 메타 "Saved Oct 6  /  Edited n times" / 반응 카드(흰 radius 20, 좌우 20·위아래 16, 번개 16 + 상황 Body/L Strong + 안내 한 줄) / 아래 Primary·Secondary 버튼. 더보기는 시안에 메뉴 모양이 없어 시트로 띄운다.

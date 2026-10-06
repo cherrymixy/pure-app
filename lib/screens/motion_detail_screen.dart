@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,10 +12,18 @@ import '../providers/chat_provider.dart';
 import '../providers/library_provider.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_host.dart';
-import '../widgets/app_shell.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/gray_box.dart';
+import '../widgets/pure_button.dart';
+import '../widgets/pure_top_bar.dart';
 
-/// 07-2 모션 상세 — 미리보기 · 정보 · 재생 · Edit in chat · Rename / Delete.
+/// 07-2 모션 상세 — Figma `481:2984`.
+///
+/// 시안 값: 뒤로가기 상단바 + 더보기 44 흰 원 / 미리보기 354×300(radius 28,
+/// `neutral/900`) / 제목 Title/L / 메타 14 / 반응 카드 radius 20 / 아래 버튼 둘.
 class MotionDetailScreen extends StatefulWidget {
   const MotionDetailScreen({super.key, required this.motionId});
 
@@ -182,110 +191,259 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
     // 삭제·이름변경이 반영되게 watch.
     final library = context.watch<LibraryProvider>();
     final motion = library.byId(widget.motionId);
-    if (motion == null) {
-      return AppShell(
-        title: S.libraryTitle,
-        onBack: () => Navigator.pop(context),
-        child: const GrayEmptyState(
-          title: S.toastDeleted,
-          body: S.emptyLibraryBody,
-        ),
-      );
-    }
 
-    final situation = motion.situation;
-    final isAuto = motion.kind == ReactionKind.auto;
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: motion == null
+            ? Column(
+                children: [
+                  const PureBackBar(),
+                  const Expanded(
+                    child: GrayEmptyState(
+                      title: S.toastDeleted,
+                      body: S.emptyLibraryBody,
+                    ),
+                  ),
+                ],
+              )
+            : _body(motion),
+      ),
+    );
+  }
 
-    return AppShell(
-      title: motion.name,
-      onBack: () => Navigator.pop(context),
-      actions: [
-        PopupMenuButton<String>(
-          onSelected: (v) => v == 'rename' ? _rename() : _delete(),
-          itemBuilder: (context) => const [
-            PopupMenuItem(value: 'rename', child: Text(S.actionRename)),
-            PopupMenuItem(value: 'delete', child: Text(S.actionDelete)),
-          ],
+  Widget _body(SavedMotion motion) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PureBackBar(
+          trailing: PureRoundButton(
+            icon: AppIconName.more,
+            onTap: _openMenu,
+          ),
         ),
-      ],
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          GestureDetector(
-            onTap: _toggle,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Gray.line),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: AspectRatio(
-                aspectRatio: 4 / 3,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    const ColoredBox(color: Color(0xFF0A0A0D)),
-                    const SimSlot(priority: 1),
-                    if (!_playing)
-                      const Center(
-                        child: Icon(Icons.play_arrow,
-                            size: 44, color: Colors.white38),
-                      ),
-                  ],
-                ),
-              ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.x24,
+              12,
+              AppSpacing.x24,
+              AppSpacing.x24,
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            [
-              fill(S.librarySavedOn, {'date': _date(motion.savedAt)}),
-              if (motion.editCount > 0)
-                fill(S.libraryEditedTimes, {'count': motion.editCount}),
-            ].join(' · '),
-            style: const TextStyle(fontSize: 12, color: Gray.dim),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              if (isAuto)
-                const Padding(
-                  padding: EdgeInsets.only(right: 6),
-                  child: Icon(Icons.bolt, size: 16, color: Gray.accent),
-                ),
-              Expanded(
-                child: Text(
-                  reactionDetail(motion.kind, situation),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isAuto ? Gray.accent : Gray.dim,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _Preview(motion: motion, playing: _playing, onTap: _toggle),
+                const SizedBox(height: 22),
+                Text(motion.name, style: AppTextStyles.titleL),
+                const SizedBox(height: AppSpacing.x4),
+                Text(
+                  [
+                    fill(S.librarySavedOn, {'date': _date(motion.savedAt)}),
+                    if (motion.editCount > 0)
+                      fill(S.libraryEditedTimes, {'count': motion.editCount}),
+                  ].join('  /  '),
+                  // 시안 14 Regular — Label/M 과 크기가 같고 굵기만 다르다.
+                  style: AppTextStyles.labelM.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
                   ),
                 ),
+                const SizedBox(height: 25),
+                _TriggerCard(motion: motion),
+                if (motion.spec.reasoning.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.x12),
+                  Text(motion.spec.reasoning, style: AppTextStyles.bodyS),
+                ],
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.x24,
+            0,
+            AppSpacing.x24,
+            18,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PureButton(
+                label: _playing ? S.actionStop : S.actionPlayOnPurebot,
+                onPressed: _toggle,
+              ),
+              const SizedBox(height: AppSpacing.x12),
+              PureButton(
+                label: S.libraryEditInChat,
+                variant: PureButtonVariant.secondary,
+                onPressed: _editInChat,
               ),
             ],
           ),
-          if (motion.spec.reasoning.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(motion.spec.reasoning,
-                style: const TextStyle(fontSize: 13, height: 1.45)),
+        ),
+      ],
+    );
+  }
+
+  /// 더보기 — 시안에 메뉴 모양이 따로 없어 시트로 띄운다 (07-2 rename / delete).
+  Future<void> _openMenu() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text(S.actionRename),
+              onTap: () => Navigator.pop(context, 'rename'),
+            ),
+            ListTile(
+              title: const Text(S.actionDelete),
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
           ],
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: _toggle,
-            icon: Icon(_playing ? Icons.stop : Icons.play_arrow),
-            label: Text(_playing ? S.actionStop : S.actionPlayOnPurebot),
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    if (choice == 'rename') {
+      await _rename();
+    } else {
+      await _delete();
+    }
+  }
+
+  /// 시안은 "Saved Oct 4" 꼴로 쓴다.
+  static const List<String> _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  static String _date(DateTime t) => '${_months[t.month - 1]} ${t.day}';
+}
+
+/// 시안 `Preview` (`481:2992`) — 354×300, radius 28, `neutral/900`.
+///
+/// 재생 중이면 여기서 시뮬레이터가 돈다. 아니면 썸네일 위에 어둡게 깔고
+/// 가운데 큰 재생 삼각형을 얹는다.
+class _Preview extends StatelessWidget {
+  const _Preview({
+    required this.motion,
+    required this.playing,
+    required this.onTap,
+  });
+
+  final SavedMotion motion;
+  final bool playing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = motion.spec.thumbnailPath;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        child: AspectRatio(
+          aspectRatio: 354 / 300,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const ColoredBox(color: AppColors.neutral900),
+              if (playing)
+                const SimSlot(priority: 1)
+              else ...[
+                if (path != null && path.isNotEmpty)
+                  Image.file(
+                    File(path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                const ColoredBox(color: AppColors.bgOverlay),
+                const Center(
+                  child: AppIcon(
+                    AppIconName.playThumb,
+                    size: 50,
+                    color: AppColors.iconOnInverse,
+                  ),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _editInChat,
-            icon: const Icon(Icons.chat_bubble_outline, size: 18),
-            label: const Text(S.libraryEditInChat),
+        ),
+      ),
+    );
+  }
+}
+
+/// 시안 `Trigger` (`481:2999`) — 흰 카드 radius 20, 좌우 20 / 위아래 16, 줄 간격 6.
+class _TriggerCard extends StatelessWidget {
+  const _TriggerCard({required this.motion});
+  final SavedMotion motion;
+
+  @override
+  Widget build(BuildContext context) {
+    final situation = motion.situation;
+    final isAuto = motion.kind == ReactionKind.auto;
+
+    final String? label;
+    final String value;
+    switch (motion.kind) {
+      case ReactionKind.auto:
+        label = S.libraryTriggerAuto;
+        value = situation == null ? '' : situationLabel(situation);
+      case ReactionKind.askFirst:
+        label = S.libraryTriggerAsk;
+        value = situation == null ? '' : situationLabel(situation);
+      case ReactionKind.manual:
+        label = null;
+        value = S.saveSheetOnlyWhenIAsk;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x20,
+        vertical: AppSpacing.x16,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (label != null) ...[
+            Text(
+              label,
+              style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Row(
+            children: [
+              if (isAuto) ...[
+                const AppIcon(
+                  AppIconName.zap,
+                  size: 16,
+                  color: AppColors.iconBrand,
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(child: Text(value, style: AppTextStyles.bodyLStrong)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            S.libraryTriggerHint,
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
     );
   }
-
-  static String _date(DateTime t) =>
-      '${t.year}.${t.month.toString().padLeft(2, '0')}.${t.day.toString().padLeft(2, '0')}';
 }
