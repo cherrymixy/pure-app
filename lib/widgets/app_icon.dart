@@ -68,6 +68,9 @@ enum AppIconName {
   /// 상세 오른쪽 위 더보기 (18).
   more('more.svg'),
 
+  /// 검색창 지우기 (16).
+  close('close.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

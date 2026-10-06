@@ -132,8 +132,10 @@ abstract final class S {
   static const libraryTriggerAsk = 'Asks before playing when';
   static const libraryTriggerHint =
       'To change this, edit the motion in chat and save it again.';
-  /// `{count}`.
+  /// `{count}`. 하나면 [librarySearchResultOne] 을 쓴다 (시안 07-3 "1 result").
   static const librarySearchResults = '{count} results';
+  static const librarySearchResultOne = '{count} result';
+  static const librarySearchCancel = 'Cancel';
 
   // ---------------------------------------------------------------- 08 로봇
   static const robotTitle = 'Robot';
