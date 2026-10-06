@@ -104,10 +104,13 @@ abstract final class S {
 
   // ---------------------------------------------------------------- 05 시그니처
   static const signatureTitle = 'Motion signature';
-  static const signatureStep1 = 'What is Purebot like?';
-  static const signatureStep2 = 'How does it come to you?';
-  static const signatureStep3 = 'How does it move?';
-  static const signatureStep4 = 'Does this feel right?';
+  // 시안 05-1~05-4. 두 줄로 끊어 놓았다.
+  static const signatureStep1 = 'If Purebot were\na person\u2026';
+  static const signatureStep2 = 'How should it\ncome to you?';
+  static const signatureStep3 = 'Which move feels\nlike Purebot?';
+  static const signatureStep4 = 'This is its hello.\nHow does it feel?';
+  /// 05-3 A/B 비교 — `{side}` 는 A 또는 B.
+  static const signaturePlayingSide = 'Playing {side} on Purebot\u2026';
   static const signatureLooksGood = 'Looks good';
   static const signatureABitSofter = 'A bit softer';
   static const signatureStartOver = 'Start over';

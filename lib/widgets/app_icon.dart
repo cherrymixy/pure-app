@@ -71,6 +71,14 @@ enum AppIconName {
   /// 검색창 지우기 (16).
   close('close.svg'),
 
+  // ---- 모션 시그니처 (05) ----
+
+  /// 05 상단 뒤로 (30.69 × 41.94). 다른 화면의 24 짜리와 모양이 다르다.
+  backLarge('back_lg.svg'),
+
+  /// 05 큰 마이크 버튼 안 (25.8 × 34.07).
+  micLarge('mic_lg.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

@@ -324,7 +324,8 @@ class _Thumb extends StatelessWidget {
           children: [
             const ColoredBox(color: AppColors.bgInverse),
             if (playing)
-              const SimSlot(priority: 1)
+              // 라운드는 SimHost 가 직접 잘라야 한다 (바깥 ClipRRect 가 안 먹는다).
+              const SimSlot(priority: 1, borderRadius: 14)
             else ...[
               if (path != null && path.isNotEmpty)
                 Image.file(

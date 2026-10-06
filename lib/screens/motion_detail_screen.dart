@@ -328,7 +328,7 @@ class _Preview extends StatelessWidget {
             children: [
               const ColoredBox(color: AppColors.neutral900),
               if (playing)
-                const SimSlot(priority: 1)
+                const SimSlot(priority: 1, borderRadius: AppRadius.xl)
               else ...[
                 if (path != null && path.isNotEmpty)
                   Image.file(

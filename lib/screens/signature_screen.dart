@@ -13,9 +13,12 @@ import '../providers/voice_provider.dart';
 import '../services/motion_engine.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_host.dart';
-import '../widgets/app_shell.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/composer.dart';
-import '../widgets/gray_box.dart';
+import '../widgets/pure_chip.dart';
 
 /// 05 의 네 단계.
 enum SignatureStep { personality, relationship, expression, preview }
@@ -289,102 +292,73 @@ class _SignatureScreenState extends State<SignatureScreen> {
   }
 
   // ---------------------------------------------------------------- 그리기
+  //
+  // 시안 05-1~05-4 (`479:2649` 외). 네 단계가 같은 틀을 쓴다:
+  // 뒤로 + Skip / 진행 막대 / 로봇 카드(폭 전체, 261, radius 29) / 답 칩 /
+  // 질문(Title/L 두 줄) / 큰 마이크 66.
+  //
+  // **답 칩이 질문 위에 있다.** 시안이 그렇게 그려져 있어 그대로 옮겼다 —
+  // 질문이 마이크 바로 위에 오고, 고를 거리는 그 위에 깔린다.
 
   @override
   Widget build(BuildContext context) {
     final voice = context.watch<VoiceProvider>();
 
-    return AppShell(
-      onBack: _back,
-      title: _isEdit ? S.signatureTitle : null,
-      showRobotStatus: false,
-      actions: [
-        if (!_isEdit && _step != SignatureStep.preview)
-          TextButton(
-            onPressed: () => _finish(skipped: true),
-            child: const Text(S.actionSkip),
-          ),
-      ],
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          if (!_isEdit) _ProgressBar(step: _step),
-          const SizedBox(height: 12),
-          _card(),
-          const SizedBox(height: 24),
-          Text(
-            voice.isListening
-                ? (voice.text.isEmpty ? S.composerListening : voice.text)
-                : _question(),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              height: 1.35,
-              fontWeight: FontWeight.w500,
-              color: voice.isListening ? Gray.dim : Gray.text,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _options(),
-          if (_step != SignatureStep.preview) ...[
-            const SizedBox(height: 20),
-            Center(
-              child: IconButton.filled(
-                onPressed: _toggleMic,
-                style: IconButton.styleFrom(
-                  backgroundColor:
-                      voice.isListening ? Colors.red.shade600 : Gray.accent,
-                ),
-                icon: Icon(voice.isListening ? Icons.stop : Icons.mic),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _card() {
-    String? label;
-    if (_step == SignatureStep.expression) {
-      label = 'Playing ${_showingA ? 'A' : 'B'} on Purebot…';
-    } else if (_step == SignatureStep.relationship && _touring) {
-      final o = kRelationshipOptions[(_tourIndex - 1).clamp(0, 2) % 3];
-      label = o.label;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Gray.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Gray.line),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: AspectRatio(
-        aspectRatio: 4 / 3,
-        child: Stack(
-          fit: StackFit.expand,
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            const ColoredBox(color: Color(0xFF0A0A0D)),
-            const SimSlot(priority: 0),
-            if (label != null)
-              Positioned(
-                left: 10,
-                top: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(label,
-                      style: const TextStyle(fontSize: 11, color: Colors.white)),
-                ),
+            const SizedBox(height: 9),
+            _TopRow(
+              onBack: _back,
+              onSkip: (!_isEdit && _step != SignatureStep.preview)
+                  ? () => _finish(skipped: true)
+                  : null,
+            ),
+            const SizedBox(height: 19),
+            // 편집 모드에는 진행 막대가 없다 (시안 05-1.edit_mode). 자리는 비워 둔다.
+            SizedBox(
+              height: 6.14,
+              child: _isEdit ? null : _ProgressBar(step: _step),
+            ),
+            const SizedBox(height: 63),
+            _RobotCard(label: _pillLabel()),
+            const Spacer(),
+            _chips(),
+            const SizedBox(height: AppSpacing.x16),
+            Text(
+              voice.isListening
+                  ? (voice.text.isEmpty ? S.composerListening : voice.text)
+                  : _question(),
+              textAlign: TextAlign.center,
+              style: AppTextStyles.titleL.copyWith(
+                height: 38.87 / 30.69,
+                color: voice.isListening
+                    ? AppColors.textSecondary
+                    : AppColors.textPrimary,
               ),
+            ),
+            const SizedBox(height: 37),
+            _MicButton(listening: voice.isListening, onTap: _toggleMic),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
+  }
+
+  /// 로봇 카드 왼쪽 위에 뜨는 알약. 재생 중일 때만.
+  String? _pillLabel() {
+    if (_step == SignatureStep.expression) {
+      return fill(S.signaturePlayingSide, {'side': _showingA ? 'A' : 'B'});
+    }
+    if (_step == SignatureStep.preview) return S.playingOnPurebot;
+    if (_step == SignatureStep.relationship && _touring) {
+      return kRelationshipOptions[(_tourIndex - 1).clamp(0, 2) % 3].label;
+    }
+    return null;
   }
 
   String _question() => switch (_step) {
@@ -394,136 +368,255 @@ class _SignatureScreenState extends State<SignatureScreen> {
         SignatureStep.preview => S.signatureStep4,
       };
 
-  Widget _options() {
+  /// 답은 전부 칩이다 (시안 `Suggested answers`).
+  Widget _chips() {
+    final List<_Answer> answers;
     switch (_step) {
       case SignatureStep.personality:
         final current = personalityFor(_draft);
-        return Column(
-          children: [
-            for (final o in kPersonalityOptions)
-              _OptionRow(
-                title: o.label,
-                subtitle: o.description,
-                // 편집 모드에서는 지금 답을 강조한다.
-                selected: _isEdit && o.id == current.id,
-                onTap: () => _choose(applyPersonality(_draft, o)),
-              ),
-          ],
-        );
+        answers = [
+          for (final o in kPersonalityOptions)
+            _Answer(
+              label: o.label,
+              // 편집 모드에서는 지금 답을 강조한다.
+              selected: _isEdit && o.id == current.id,
+              onTap: () => _choose(applyPersonality(_draft, o)),
+            ),
+        ];
 
       case SignatureStep.relationship:
-        return Column(
-          children: [
-            for (final o in kRelationshipOptions)
-              _OptionRow(
-                title: o.label,
-                subtitle: o.description,
-                selected: _isEdit && o.value == _draft.relationship,
-                onTap: () => _choose(_draft.copyWith(relationship: o.value)),
-              ),
-          ],
-        );
+        answers = [
+          for (final o in kRelationshipOptions)
+            _Answer(
+              label: o.label,
+              selected: _isEdit && o.value == _draft.relationship,
+              onTap: () => _choose(_draft.copyWith(relationship: o.value)),
+            ),
+        ];
 
       case SignatureStep.expression:
-        return Column(
-          children: [
-            for (final o in kExpressionOptions)
-              _OptionRow(
-                title: o.label,
-                subtitle: o.description,
-                selected: _isEdit && o.value == _draft.expression,
-                onTap: () => _choose(_draft.copyWith(expression: o.value)),
-              ),
-          ],
-        );
+        // 시안은 앞의 둘에만 A / B 를 붙인다 — 번갈아 보여 주는 두 안이라서.
+        const sides = ['A  ', 'B  ', ''];
+        answers = [
+          for (final (i, o) in kExpressionOptions.indexed)
+            _Answer(
+              label: '${sides[i.clamp(0, 2)]}${o.label}',
+              selected: _isEdit && o.value == _draft.expression,
+              onTap: () => _choose(_draft.copyWith(expression: o.value)),
+            ),
+        ];
 
       case SignatureStep.preview:
-        return Column(
-          children: [
-            Text(
-              signatureSummary(_draft),
-              style: const TextStyle(fontSize: 13, color: Gray.dim, letterSpacing: 1),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => _finish(),
-              child: const Text(S.signatureLooksGood),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _softerPreview,
-                    child: const Text(S.signatureABitSofter),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      setState(() => _step = SignatureStep.personality);
-                      _enterStep();
-                    },
-                    child: const Text(S.signatureStartOver),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
+        answers = [
+          _Answer(label: S.signatureLooksGood, onTap: () => _finish()),
+          _Answer(label: S.signatureABitSofter, onTap: _softerPreview),
+          _Answer(
+            label: S.signatureStartOver,
+            onTap: () {
+              setState(() => _step = SignatureStep.personality);
+              _enterStep();
+            },
+          ),
+        ];
     }
+
+    // 시안: 폭 354, 가운데 정렬, 간격 8.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 354),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: AppSpacing.x8,
+          runSpacing: AppSpacing.x8,
+          children: [
+            for (final a in answers)
+              PureChip(
+                label: a.label,
+                state: a.selected
+                    ? PureChipState.selected
+                    : PureChipState.normal,
+                onTap: a.onTap,
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
+/// 답 하나.
+class _Answer {
+  const _Answer({required this.label, required this.onTap, this.selected = false});
+  final String label;
+  final VoidCallback onTap;
+  final bool selected;
+}
+
+/// 시안 `479:2653` — 뒤로(30.69 × 41.94) 와 Skip, 좌우 여백 15.34.
+class _TopRow extends StatelessWidget {
+  const _TopRow({required this.onBack, this.onSkip});
+
+  final VoidCallback onBack;
+  final VoidCallback? onSkip;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.34),
+        child: SizedBox(
+          height: 41.94,
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: onBack,
+                behavior: HitTestBehavior.opaque,
+                child: const SizedBox(
+                  width: 44,
+                  height: 41.94,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AppIcon(AppIconName.backLarge, size: 30.69),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (onSkip != null)
+                GestureDetector(
+                  onTap: onSkip,
+                  behavior: HitTestBehavior.opaque,
+                  child: Text(
+                    S.actionSkip,
+                    // 시안 15.34 Regular — Body/L 과 거의 같다.
+                    style: AppTextStyles.bodyL.copyWith(
+                      fontSize: 15.34,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+}
+
+/// 시안 `479:2657` — 흰 트랙 349.83 × 6.14(radius 3.07), 채움은 토큰 밖 `#3d414d`.
 class _ProgressBar extends StatelessWidget {
   const _ProgressBar({required this.step});
   final SignatureStep step;
 
+  static const Color _fill = Color(0xFF3D414D);
+
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          for (final s in SignatureStep.values)
-            Expanded(
-              child: Container(
-                height: 3,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
-                  color: s.index <= step.index ? Gray.accent : Gray.line,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+  Widget build(BuildContext context) {
+    final ratio = (step.index + 1) / SignatureStep.values.length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 23.53),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3.07),
+        child: Stack(
+          children: [
+            Container(height: 6.14, color: AppColors.bgSurface),
+            FractionallySizedBox(
+              widthFactor: ratio,
+              child: Container(height: 6.14, color: _fill),
             ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 시안 `Robot` (`479:2659`) — 폭 전체 · 높이 261 · radius 29.19 · 흰 바탕.
+/// 시뮬레이터가 이 안에서 돈다.
+class _RobotCard extends StatelessWidget {
+  const _RobotCard({this.label});
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+        borderRadius: BorderRadius.circular(29.19),
+        child: SizedBox(
+          height: 261,
+          width: double.infinity,
+          child: Stack(
+            children: [
+              const Positioned.fill(child: ColoredBox(color: AppColors.bgSurface)),
+              // WebView 는 SimHost 가 그리므로 바깥 ClipRRect 가 먹지 않는다 —
+              // 라운드를 자리와 함께 넘긴다.
+              const Positioned.fill(
+                child: SimSlot(priority: 0, borderRadius: 29.19),
+              ),
+              if (label != null)
+                Positioned(
+                  left: AppSpacing.x24,
+                  top: AppSpacing.x20,
+                  child: _StatusPill(label: label!),
+                ),
+            ],
+          ),
+        ),
       );
 }
 
-class _OptionRow extends StatelessWidget {
-  const _OptionRow({
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.selected = false,
-  });
-
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool selected;
+/// 시안 `Pill/Status` (`479:2876`) — `bg/surface-muted`, 왼쪽 14 / 오른쪽 16 /
+/// 위아래 9, 간격 8, 세이지 점 8, 글자 `PURE/Label/M`.
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label});
+  final String label;
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.fromLTRB(14, 9, AppSpacing.x16, 9),
         decoration: BoxDecoration(
-          color: Gray.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? Gray.accent : Gray.line, width: selected ? 2 : 1),
+          color: AppColors.bgSurfaceMuted,
+          borderRadius: BorderRadius.circular(AppRadius.full),
         ),
-        child: ListTile(
-          title: Text(title, style: const TextStyle(fontSize: 15)),
-          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-          trailing: selected ? const Icon(Icons.check, color: Gray.accent) : null,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: AppColors.bgBrand,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.x8),
+            Text(label, style: AppTextStyles.labelM),
+          ],
+        ),
+      );
+}
+
+/// 시안 `Button/Mic` (`479:2662`) — 66 검은 원, 아이콘 25.8 × 34.07.
+class _MicButton extends StatelessWidget {
+  const _MicButton({required this.listening, required this.onTap});
+
+  final bool listening;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: listening ? AppColors.statusError : AppColors.bgInverse,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
           onTap: onTap,
+          child: SizedBox(
+            width: 66,
+            height: 66,
+            child: Center(
+              child: listening
+                  ? const Icon(Icons.stop, size: 28, color: AppColors.iconOnInverse)
+                  : const AppIcon(
+                      AppIconName.micLarge,
+                      size: 34.07,
+                      color: AppColors.iconOnInverse,
+                    ),
+            ),
+          ),
         ),
       );
 }

@@ -144,7 +144,7 @@ class _SimulationBubble extends StatelessWidget {
               children: [
                 const ColoredBox(color: _mediaBackdrop),
                 if (isActive)
-                  const SimSlot(priority: 0)
+                  const SimSlot(priority: 0, borderRadius: AppRadius.md)
                 else
                   _Thumbnail(path: spec.thumbnailPath),
                 // 실제 3D 가 돌 때는 덮지 않는다 — 시안의 어둡게는 썸네일 위의 것이다.

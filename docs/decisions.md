@@ -122,3 +122,6 @@
 - STEP 22 삭제·이름변경 시트(07-2) 번역: 공용 PureSheet(위 모서리 28, 좌우 24, 위 10/아래 44, 손잡이 36×5) 위에 showPureConfirm(제목 가운데 + 본문 + 빨간 Delete + Subtle Cancel)과 showPureRename(제목 왼쪽 + 입력 56 with 글자 수 + Save + Cancel)을 올렸다. PureButton 에 danger(status/error) 를 더했다. 삭제 문구는 시안대로 "Delete “이름”?" / "Purebot will stop playing it when … This can’t be undone."
 - STEP 22 빈 상태 둘 번역: 07-1.empty 는 아이콘 칩 64 + Title/M + 두 줄 + 검정 알약(PureEmptyState), 07-3.no_results 는 Title/S + 한 줄 + Secondary L(PureNoResults). 문구도 시안대로 바꿨다 ("Save a motion from Home and it’ll show up here." / "No motions match “dance”"). 결과 없음 화면에는 결과 수 줄을 띄우지 않는다.
 - 개발용 dart-define 목록(전시 빌드에는 없음, STEP 25 에서 정리): START_ROUTE OPEN_DRAWER START_CHIP DEV_AUTO_ANSWER DEV_SAVE_SHEET DEV_OPEN_DETAIL DEV_SHEET DEV_EMPTY DEV_QUERY SIM_SELFTEST.
+- STEP 22 모션 시그니처(05-1~05-4) 번역: 뒤로 30.69 + Skip / 진행 막대 349.83×6.14(채움 #3d414d) / 로봇 카드 폭 전체 261 radius 29.19 / 답 칩 Wrap / 질문 Title/L 두 줄 / 큰 마이크 66. 선택지가 제목+설명 카드에서 칩으로 바뀌었고 설명 문구는 화면에서 사라졌다. 질문 문구도 시안대로 ("If Purebot were a person…" 등). 편집 모드는 진행 막대와 Skip 이 없다.
+- 시안에서 답 칩이 질문 **위**에 있다. 질문이 큰 마이크 바로 위에 오는 구성이라 그대로 옮겼다.
+- SimSlot 에 borderRadius 를 넘기지 않으면 WebView 가 각지게 나온다 — 바깥 ClipRRect 는 SimHost 가 그리는 WebView 에 먹지 않는다. 시그니처/라이브러리/상세/채팅 네 군데 모두 라운드를 함께 넘기도록 고쳤다.
