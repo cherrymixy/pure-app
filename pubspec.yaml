@@ -20,7 +20,7 @@ dependencies:
   image_picker: ^1.2.3
   fc_native_video_thumbnail: ^3.0.1
   # 영상 길이를 읽는 데만 쓴다. image_picker 는 앨범에서 고른 영상의 길이를 주지 않는다.
-  video_player: ^2.9.2
+  video_player: ^2.14.1
   speech_to_text: ^7.5.0
 
   # 저장
@@ -54,6 +54,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/icons/
+    - assets/video/
     # Flutter 의 폴더 선언은 하위 폴더를 포함하지 않는다. sim 번들의 모든 폴더를
     # 하나씩 적어야 한다 — 빠뜨리면 로컬 서버가 200 에 0바이트를 돌려줘 조용히 실패한다.
     # scripts/build_sim.sh 가 빌드할 때마다 이 목록을 검사한다.

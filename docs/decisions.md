@@ -113,3 +113,4 @@
 - 시트·다이얼로그가 뜨면 시뮬레이터가 그 위를 덮던 문제 수정: SimSlot 이 자기 ModalRoute 를 함께 넘기고, SimHost 는 isCurrent 가 아닌 자리를 셈에서 뺀다.
 - 홈과 채팅을 한 화면으로 합쳤다 (승아 결정). 말을 걸면 화면이 넘어가는 대신 글로우·인사말·칩이 사라지고 말풍선이 그 자리를 채운다 (AnimatedSwitcher 260ms / 글로우 420ms). chat_screen.dart 와 /chat 라우트 삭제, 대화 열기는 전부 홈으로 돌아간다. New motion 도 빈 홈으로 시작.
 - 사이드바가 열려도 시뮬레이터가 그 위를 덮던 문제 수정: Drawer 는 라우트를 쌓지 않아 ModalRoute 로는 안 잡힌다. SimSlot 이 Scaffold 도 함께 넘기고 SimHost 가 isDrawerOpen 을 본다.
+- 스플래시 로고는 정지 이미지가 아니라 영상이었다 (logo_motion_mobile 3). PNG·SVG 로 받으면 빈 그림이 나오던 이유다. Figma export_video 로 프레임째 MP4 를 받아(402×874 · 2.03초 · 32KB) assets/video/splash.mp4 로 넣고 video_player 로 재생한다. 영상이 끝나면 홈으로, 못 열면 2.6초 안전망이 넘긴다.
