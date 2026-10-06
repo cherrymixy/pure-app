@@ -131,3 +131,6 @@
 - STEP 22 08 섹션 나머지 번역: 활동 기록(08-5, 필터 칩 S·날짜 그룹 카드·시각 60 + 재생 36), 모션 시그니처(08-2, 제목 26 + 네 줄 + Reset/Preview), 내 로봇(08-3, 기기 목록·Add a robot·빨간 Remove), 펌웨어(08-4, 버전 카드 radius 24 + What is new 세 줄 + 진행 화면 + 최신 상태).
 - 08-2 의 Sound 줄과 08-3 의 Desk Lamp 는 시안에만 있는 더미다 (data/robot_devices.dart). 08-3 삭제 확인은 시안이 가운데 다이얼로그지만 다른 확인과 맞춰 PureSheet 로 통일했다.
 - PureBackBar 에 title 을 더했다 (시안 Top Bar / Back + Title, 17 Medium 가운데). PureChip S 는 시안 값 32 로 맞췄다.
+- STEP 22 마이·알림(09·10) 번역: 09-1 프로필 카드(아바타 56 + Edit 알약) + 메뉴 두 묶음 + Version, 09-2 토글 셋 + From PURE 그룹, 09-3 계정(Email·Signed in with / Change password / Log out·Delete), 09-4 Help 아코디언·Terms, 10-1 알림(아이콘 원 40 + 제목·시각·안 읽음 점 7, 날짜 그룹, Mark all read).
+- robot_screen 의 _MenuCard/_MenuRow 를 widgets/pure_list.dart 의 PureCard/PureRow 로 승격했다 (로봇·마이가 같은 행을 쓴다). trailing 슬롯을 더해 스위치도 넣는다.
+- 알림 토글 키를 시안에 맞춰 바꿨다: firmware → robotOffline, autoReactions 추가 (data/seed.dart).

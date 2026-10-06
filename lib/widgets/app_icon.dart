@@ -105,6 +105,25 @@ enum AppIconName {
   /// `Add a robot` 행 (18).
   plusRow('plus_row.svg'),
 
+  // ---- 마이 (09) ----
+
+  /// `Notifications` 행 (18).
+  bellRow('bell_row.svg'),
+
+  /// `Account` 행 (18).
+  user('user.svg'),
+
+  /// `Terms & Privacy` 행 (18). 이름이 [file] 필드와 겹쳐 doc 를 붙였다.
+  fileDoc('file.svg'),
+
+  // ---- 알림 (10) ----
+
+  /// 연결이 끊겼다는 알림 (18).
+  unlink('unlink.svg'),
+
+  /// 새 아이디어 알림 (18).
+  sparkle('sparkle.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

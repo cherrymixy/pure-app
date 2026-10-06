@@ -229,7 +229,31 @@ abstract final class S {
   static const meEdit = 'Edit';
   static const meYourName = 'Your name';
   static const meNotifications = 'Notifications';
+  // 09-2 토글 (시안 `481:4589`).
+  static const meNotifMotionReady = 'Motion ready';
+  static const meNotifMotionReadyBody = 'When Purebot finishes making a motion';
+  static const meNotifRobotOffline = 'Robot offline';
+  static const meNotifRobotOfflineBody = 'When Purebot loses connection';
+  static const meNotifAutoReactions = 'Auto reactions';
+  static const meNotifAutoReactionsBody =
+      'Each time Purebot plays a motion on its own';
+  static const meNotifFromPure = 'From PURE';
+  static const meNotifTips = 'Product updates & tips';
+  static const meNotifTipsBody = 'News and ideas for your robot';
   static const meAccount = 'Account';
+  // 09-3 (시안 `481:4679`).
+  static const meAccountEmail = 'Email';
+  static const meAccountSignedIn = 'Signed in with';
+  static const meAccountApple = 'Apple';
+  static const meAccountChangePassword = 'Change password';
+  static const meAccountChangePasswordBody = 'Only for email accounts';
+  static const meLogOutTitle = 'Log out of PURE?';
+  static const meLogOutBody =
+      'Purebot keeps its saved motions and auto reactions. Sign in again to control it.';
+  static const meDeleteTitle = 'Delete your account?';
+  static const meDeleteBody =
+      'This can\u2019t be undone. All your motions and chats are deleted, your robots '
+      'are removed from the account and reset.';
   static const meHelp = 'Help & FAQ';
   static const meTerms = 'Terms & Privacy';
   /// `{version}`.
@@ -239,6 +263,9 @@ abstract final class S {
 
   // ---------------------------------------------------------------- 10 알림
   static const notificationsTitle = 'Notifications';
+  /// 시안 10-1 `481:5238`.
+  static const notificationsMarkAllRead = 'Mark all read';
+  static const notificationsEarlier = 'Earlier';
 
   // ---------------------------------------------------------------- 토스트
   static const toastSavedToLibrary = 'Saved to Library';

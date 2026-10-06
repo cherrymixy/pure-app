@@ -25,6 +25,7 @@ import '../widgets/app_icon.dart';
 import '../widgets/gray_box.dart';
 import '../widgets/pure_button.dart';
 import '../widgets/pure_chip.dart';
+import '../widgets/pure_list.dart';
 import '../widgets/pure_empty.dart';
 import '../widgets/pure_sheet.dart';
 import '../widgets/pure_sidebar.dart';
@@ -77,9 +78,9 @@ class RobotScreen extends StatelessWidget {
                   const SizedBox(height: AppSpacing.x12),
                   const _ModesCard(),
                   const SizedBox(height: AppSpacing.x12),
-                  _MenuCard(
+                  PureCard(
                     rows: [
-                      _MenuRow(
+                      PureRow(
                         label: S.robotMotionSignature,
                         value: signatureLine(robot.signature),
                         labelOnTop: true,
@@ -91,9 +92,9 @@ class RobotScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.x12),
-                  _MenuCard(
+                  PureCard(
                     rows: [
-                      _MenuRow(
+                      PureRow(
                         icon: AppIconName.board,
                         iconSize: 20,
                         label: S.robotActivityHistory,
@@ -109,14 +110,14 @@ class RobotScreen extends StatelessWidget {
                         onTap: () =>
                             Navigator.pushNamed(context, AppRoutes.robotActivity),
                       ),
-                      _MenuRow(
+                      PureRow(
                         icon: AppIconName.robot,
                         label: S.robotMyRobots,
                         trailingText: '${info.myRobots.length}',
                         onTap: () =>
                             Navigator.pushNamed(context, AppRoutes.robotList),
                       ),
-                      _MenuRow(
+                      PureRow(
                         icon: AppIconName.download,
                         label: 'Firmware update',
                         value: fill(S.robotVersionReady, {
@@ -126,7 +127,7 @@ class RobotScreen extends StatelessWidget {
                         onTap: () =>
                             Navigator.pushNamed(context, AppRoutes.firmware),
                       ),
-                      _MenuRow(
+                      PureRow(
                         icon: AppIconName.help,
                         label: S.robotHelp,
                         // 전시용 더미 — 도움말 문서는 없다.
@@ -424,139 +425,6 @@ class _ModeChip extends StatelessWidget {
   }
 }
 
-/// 시안 `Frame` (`488:4740` · `488:4747`) — 흰 카드 radius 20, 위아래 4.
-class _MenuCard extends StatelessWidget {
-  const _MenuCard({required this.rows});
-  final List<Widget> rows;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        clipBehavior: Clip.antiAlias,
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.x4),
-        child: Column(children: rows),
-      );
-}
-
-/// 메뉴 한 줄 — 왼쪽 16 / 오른쪽 14 / 위아래 14, 간격 12, 꺾쇠 18.
-class _MenuRow extends StatelessWidget {
-  const _MenuRow({
-    required this.label,
-    required this.onTap,
-    this.icon,
-    this.iconSize = 18,
-    this.value,
-    this.trailingText,
-    this.trailingIcon,
-    this.valueIsBrand = false,
-    this.labelOnTop = false,
-    this.showChevron = true,
-    this.danger = false,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final AppIconName? icon;
-  final double iconSize;
-
-  /// 라벨 아래(또는 위) 한 줄.
-  final String? value;
-
-  /// 꺾쇠 왼쪽 작은 글자 (로봇 수 등).
-  final String? trailingText;
-
-  /// 꺾쇠 대신 보여 줄 아이콘 (고른 기기의 체크 등).
-  final AppIconName? trailingIcon;
-
-  final bool valueIsBrand;
-
-  /// 모션 시그니처 행처럼 작은 라벨이 위, 값이 아래인가.
-  final bool labelOnTop;
-
-  final bool showChevron;
-
-  /// 되돌릴 수 없는 행동 — 글자가 빨개진다.
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final small = AppTextStyles.bodyS.copyWith(
-      color: valueIsBrand ? AppColors.textBrand : AppColors.textSecondary,
-    );
-    final big = AppTextStyles.bodyM.copyWith(
-      fontWeight: FontWeight.w500,
-      color: danger ? AppColors.textError : AppColors.textPrimary,
-    );
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.x16,
-          14,
-          14,
-          14,
-        ),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              SizedBox(
-                width: 36,
-                height: 36,
-                child: Center(child: AppIcon(icon!, size: iconSize)),
-              ),
-              const SizedBox(width: AppSpacing.x12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: labelOnTop
-                    ? [
-                        Text(label, style: small),
-                        const SizedBox(height: 2),
-                        Text(value ?? '', style: big),
-                      ]
-                    : [
-                        Text(label, style: big),
-                        if (value != null) ...[
-                          const SizedBox(height: 2),
-                          Text(value!, style: small),
-                        ],
-                      ],
-              ),
-            ),
-            if (trailingText != null) ...[
-              const SizedBox(width: AppSpacing.x8),
-              Text(
-                trailingText!,
-                style: AppTextStyles.labelS.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-            if (trailingIcon != null) ...[
-              const SizedBox(width: AppSpacing.x12),
-              AppIcon(trailingIcon!, size: 18),
-            ],
-            if (showChevron) ...[
-              const SizedBox(width: AppSpacing.x12),
-              const AppIcon(
-                AppIconName.chevron,
-                size: 18,
-                color: AppColors.iconSecondary,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// 08-2 시그니처 재설정 — 항목을 탭하면 05 편집 모드로 간다.
 /// 08-2 모션 시그니처 — Figma `481:3480`.
 ///
@@ -635,9 +503,9 @@ class SignatureResetScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.x24),
-                  _MenuCard(
+                  PureCard(
                     rows: [
-                      _MenuRow(
+                      PureRow(
                         labelOnTop: true,
                         label: S.robotSignaturePersonality,
                         value: fill(S.robotSignaturePersonalityValue, {
@@ -646,13 +514,13 @@ class SignatureResetScreen extends StatelessWidget {
                         }),
                         onTap: () => edit(SignatureStep.personality),
                       ),
-                      _MenuRow(
+                      PureRow(
                         labelOnTop: true,
                         label: S.robotSignatureRelationship,
                         value: relationshipFor(s.relationship).label,
                         onTap: () => edit(SignatureStep.relationship),
                       ),
-                      _MenuRow(
+                      PureRow(
                         labelOnTop: true,
                         label: S.robotSignatureMotion,
                         value: fill(S.robotSignatureMotionValue, {
@@ -662,7 +530,7 @@ class SignatureResetScreen extends StatelessWidget {
                         onTap: () => edit(SignatureStep.expression),
                       ),
                       // 소리는 아직 없는 기능이다 — 시안에 있어 자리만 둔다.
-                      _MenuRow(
+                      PureRow(
                         labelOnTop: true,
                         label: S.robotSignatureSound,
                         value: S.robotSignatureSoundValue,
@@ -753,10 +621,10 @@ class RobotListScreen extends StatelessWidget {
                   AppSpacing.x24,
                 ),
                 children: [
-                  _MenuCard(
+                  PureCard(
                     rows: [
                       for (final d in kRobotDevices)
-                        _MenuRow(
+                        PureRow(
                           icon: AppIconName.robot,
                           label: d.name,
                           value: fill(S.robotDeviceLine, {
@@ -772,9 +640,9 @@ class RobotListScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.x16),
-                  _MenuCard(
+                  PureCard(
                     rows: [
-                      _MenuRow(
+                      PureRow(
                         icon: AppIconName.plusRow,
                         label: S.robotAddRobot,
                         // 더미 — 기기를 더 붙일 일은 없다.
@@ -783,9 +651,9 @@ class RobotListScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 48),
-                  _MenuCard(
+                  PureCard(
                     rows: [
-                      _MenuRow(
+                      PureRow(
                         label: fill(S.robotRemoveFromAccount, {
                           'name': primary.name,
                         }),

@@ -159,7 +159,8 @@ const RobotSeedInfo kRobotSeedInfo = RobotSeedInfo();
 /// 09-2 알림 토글 기본값. 로컬에만 저장된다.
 const Map<String, bool> kSeedNotificationSettings = {
   'motionPlayed': true,
-  'firmware': true,
+  'robotOffline': true,
+  'autoReactions': false,
   'tips': false,
 };
 
