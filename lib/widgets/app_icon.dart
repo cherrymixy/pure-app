@@ -132,6 +132,11 @@ enum AppIconName {
   /// 반복 토글 (14).
   repeat('repeat.svg'),
 
+  // ---- 배너 ----
+
+  /// 데모·오프라인 배너 왼쪽 (16).
+  wifiOff('wifi_off.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

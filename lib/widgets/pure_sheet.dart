@@ -4,6 +4,7 @@ import '../data/strings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import 'app_icon.dart';
 import 'pure_button.dart';
 
 /// 바닥에서 올라오는 시트의 공통 틀 — Figma 07-2 `481:3099` · `481:3399`.
@@ -213,4 +214,120 @@ Future<String?> showPureRename(
       },
     ),
   );
+}
+
+/// [showPureChoice] 의 한 줄.
+class PureChoice<T> {
+  const PureChoice({required this.label, required this.value});
+
+  final String label;
+  final T value;
+}
+
+/// 몇 갈래 중 하나를 고르게 한다 — 영상 첨부처럼 시안에 프레임이 없는 시트.
+///
+/// 새 값을 만들지 않고 저장 시트의 선택지 덩어리(`bg/surface-muted`, radius 18,
+/// 한 줄 56, 좌우 18)와 같은 모양을 쓴다.
+Future<T?> showPureChoice<T>(
+  BuildContext context, {
+  required String title,
+  required List<PureChoice<T>> options,
+}) =>
+    _show<T>(
+      context,
+      (context) => PureSheet(
+        children: [
+          const SizedBox(height: 22),
+          Text(title, style: AppTextStyles.titleM),
+          const SizedBox(height: AppSpacing.x16),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.bgSurfaceMuted,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final o in options)
+                  InkWell(
+                    onTap: () => Navigator.pop(context, o.value),
+                    child: SizedBox(
+                      height: 56,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(o.label, style: AppTextStyles.bodyL),
+                            ),
+                            const AppIcon(
+                              AppIconName.chevron,
+                              size: 16,
+                              color: AppColors.iconSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.x20),
+          PureButton(
+            label: S.actionCancel,
+            variant: PureButtonVariant.subtle,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+
+/// 알리고 한 가지를 권한다 — 권한 거부(01-E1)처럼 되돌릴 게 없는 시트.
+///
+/// [showPureConfirm] 과 같은 틀이지만 주 버튼이 빨강이 아니라 검정이고,
+/// 보조 버튼의 문구를 고를 수 있다.
+Future<bool> showPureNotice(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required String actionLabel,
+  String dismissLabel = S.actionNotNow,
+}) async {
+  final ok = await _show<bool>(
+    context,
+    (context) => PureSheet(
+      center: true,
+      children: [
+        const SizedBox(height: 26),
+        Text(title, textAlign: TextAlign.center, style: AppTextStyles.titleM),
+        const SizedBox(height: AppSpacing.x8),
+        Text(
+          body,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.x24),
+        SizedBox(
+          width: double.infinity,
+          child: PureButton(
+            label: actionLabel,
+            variant: PureButtonVariant.inverse,
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          child: PureButton(
+            label: dismissLabel,
+            variant: PureButtonVariant.subtle,
+            onPressed: () => Navigator.pop(context, false),
+          ),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
 }

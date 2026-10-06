@@ -144,3 +144,9 @@
 - 모델 비교: qwen3:8b 7~10초/문구 좋음, qwen3:4b 4~5초/문구 거칢. 기본은 8b, OLLAMA_MODEL 로 바꾼다.
 - iOS 는 평문 http 를 막는다. Info.plist 에 NSAllowsLocalNetworking 만 켰다 — 로컬 네트워크만 열리고 인터넷은 그대로 HTTPS 강제라 OpenAI 호출에는 영향이 없다.
 - 실기기에서 쓰려면 맥에서 OLLAMA_HOST=0.0.0.0 으로 띄우고 앱에 맥의 LAN 주소를 넣어야 한다. 같은 Wi-Fi 필수.
+- STEP 23 폴리시 1차: 회색박스 잔재 제거. 토스트를 시안 `Toast`(483:21729)로 옮겼고(검정 알약 16/px16 py14, 아래 여백 86 — 입력창을 덮지 않게), 남아 있던 회색 조각 셋을 번역했다 — 영상 첨부 시트·구간 선택 시트(composer)·권한 시트(01-E1), 마이의 데모 초기화 확인과 이름 변경 시트. 공용으로 `showPureChoice`(선택지 한 덩어리 + Cancel)와 `showPureNotice`(검정 주 버튼 + Not now)를 pure_sheet.dart 에 더했다.
+- AppShell·gray_box 삭제. 화면이 전부 PureTopBar/PureMenuBar/PureBackBar 로 옮겨 가면서 쓰는 곳이 없어졌다. 안에 있던 DemoModeToggle 만 widgets/demo_mode_toggle.dart 로 뺐다.
+- 숨은 데모 토글이 AppShell 과 함께 화면에서 사라져 있었다. 사이드바 프로필의 로봇 상태 줄(5번 탭)로 옮겼다 — 전시 중 어느 화면에서든 사이드바만 열면 닿는다.
+- 시안 `Banner/Offline`(483:21358)을 PureBanner 로 옮기고 홈 상단바 아래에 달았다. 이 앱은 연결 상태를 보지 않으므로 띄우는 조건은 **데모 모드가 켜져 있을 때** 하나다 — 문구 "Using demo motions", 오른쪽 알약은 Turn off.
+- 사이드바·마이에 하드코딩돼 있던 문구를 strings.dart 로 올렸다 (menuHome/Library/Robot/ActivityHistory/Notifications/Recent/SeeAll/MeSettings/Untitled, devResetTitle·Body, composerAttachTitle·TrimRange·Selected, emptyMotionGone*). 시안이 "Me / Settings" 라 menuMeSettings 의 가운뎃점을 슬래시로 고쳤다.
+- [빌드] Swift Package Manager 를 프로젝트 단위로 껐다 (`pubspec.yaml` → flutter.config.enable-swift-package-manager: false). Flutter 가 만드는 SPM 패키지가 iOS 13.0 으로 고정돼 있는데 fc_native_video_thumbnail 이 14.0 을 요구해서, `flutter pub get` 뒤 Xcode 에서 바로 빌드하면 패키지 해석이 실패했다 (flutter build ios 로 들어갈 때만 Flutter 가 14.0 으로 올려 준다). Podfile 은 이미 platform :ios, '14.0' 이라 pods 경로로는 문제가 없다.

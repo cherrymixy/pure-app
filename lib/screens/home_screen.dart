@@ -27,9 +27,10 @@ import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/composer.dart';
-import '../widgets/gray_box.dart';
+import '../widgets/pure_banner.dart';
 import '../widgets/pure_chip.dart';
 import '../widgets/pure_sidebar.dart';
+import '../widgets/pure_toast.dart';
 import '../widgets/pure_top_bar.dart';
 import '../widgets/robot_card.dart';
 import '../widgets/save_sheet.dart';
@@ -558,14 +559,14 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (outcome) {
       case SaveSucceeded(:final motion):
         setState(() => _savedSpecs[spec.id] = motion.id);
-        showGrayToast(
+        showPureToast(
           context,
           S.toastSavedToLibrary,
           actionLabel: S.actionView,
           onAction: () => Navigator.pushNamed(context, AppRoutes.library),
         );
       case SaveRejected(:final reason):
-        showGrayToast(context, switch (reason) {
+        showPureToast(context, switch (reason) {
           SaveRejectReason.nameTaken => S.errorNameTaken,
           _ => S.errorNameEmpty,
         });
@@ -666,6 +667,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 const PureTopBar(),
+                // 시안 C-1: 상단바 아래, 좌우 24. 이 앱이 아는 '오프라인' 은
+                // 데모 모드뿐이라 그때만 뜬다.
+                if (context.watch<GenerationProvider>().forceDemo)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.x24,
+                      AppSpacing.x8,
+                      AppSpacing.x24,
+                      0,
+                    ),
+                    child: PureBanner(
+                      message: S.bannerDemoMode,
+                      actionLabel: S.actionTurnOff,
+                      onAction: _turnOffDemoMode,
+                    ),
+                  ),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 260),
@@ -699,6 +716,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  /// 배너의 `Turn off` — 데모 모드를 끈다.
+  Future<void> _turnOffDemoMode() async {
+    await context.read<GenerationProvider>().toggleDemoMode();
+    if (!mounted) return;
+    showPureToast(context, S.homeDemoModeOff);
   }
 
   /// 답안 칩을 마지막 질문에만 붙이려고 쓴다.

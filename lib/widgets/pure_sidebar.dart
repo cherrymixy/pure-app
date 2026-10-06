@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_routes.dart';
+import '../data/strings.dart';
 import '../models/message.dart';
 import '../providers/chat_provider.dart';
 import '../providers/library_provider.dart';
@@ -12,6 +13,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'app_icon.dart';
+import 'demo_mode_toggle.dart';
+import 'pure_toast.dart';
 
 /// M-1 사이드바 — Figma `Sidebar` (`457:4269`, 인스턴스 `483:19272`).
 ///
@@ -57,7 +60,7 @@ class PureSidebar extends StatelessWidget {
             const Expanded(child: _Recent()),
             _MenuItem(
               icon: AppIconName.navSettings,
-              label: 'Me / Settings',
+              label: S.menuMeSettings,
               onTap: () => _go(context, AppRoutes.me),
             ),
           ],
@@ -77,8 +80,34 @@ class PureSidebar extends StatelessWidget {
 }
 
 /// 프로필 — 아바타 44 + 이름 Title/S + 로봇 상태 한 줄.
-class _Profile extends StatelessWidget {
+///
+/// 로봇 이름을 5번 두드리면 데모 모드가 토글된다 (PRD §6-7 숨은 토글).
+/// 전시 중에 인터넷이나 키가 말을 안 들을 때 쓰는 비상구다.
+class _Profile extends StatefulWidget {
   const _Profile();
+
+  @override
+  State<_Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<_Profile> {
+  int _taps = 0;
+  DateTime _lastTap = DateTime.fromMillisecondsSinceEpoch(0);
+
+  Future<void> _onStatusTap() async {
+    final now = DateTime.now();
+    // 간격이 뜨면 처음부터. 실수로 쌓이는 걸 막는다.
+    _taps = now.difference(_lastTap) > const Duration(seconds: 2) ? 1 : _taps + 1;
+    _lastTap = now;
+    if (_taps < 5) return;
+    _taps = 0;
+
+    final toggle = DemoModeToggle.of(context);
+    if (toggle == null) return;
+    final on = await toggle();
+    if (!mounted) return;
+    showPureToast(context, on ? S.homeDemoModeOn : S.homeDemoModeOff);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,21 +140,28 @@ class _Profile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
-              Row(
-                children: [
-                  const AppIcon(AppIconName.dot, size: 7),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '${robot.robot.name} / Connected',
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: AppColors.textSecondary,
+              GestureDetector(
+                onTap: _onStatusTap,
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  children: [
+                    const AppIcon(AppIconName.dot, size: 7),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        fill(S.menuRobotLine, {
+                          'name': robot.robot.name,
+                          'status': S.robotConnected,
+                        }),
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -151,7 +187,7 @@ class _NewMotionButton extends StatelessWidget {
             textStyle: AppTextStyles.bodyLStrong,
           ),
           onPressed: () => PureSidebar._go(context, AppRoutes.homeNew, replace: true),
-          child: const Text('+  New motion'),
+          child: const Text(S.menuNewMotionButton),
         ),
       );
 }
@@ -168,28 +204,28 @@ class _Menu extends StatelessWidget {
       children: [
         _MenuItem(
           icon: AppIconName.navHome,
-          label: 'Home',
+          label: S.menuHome,
           selected: route == AppRoutes.home,
           onTap: () => PureSidebar._go(context, AppRoutes.home, replace: true),
         ),
         _MenuItem(
           icon: AppIconName.navLibrary,
-          label: 'Library',
+          label: S.menuLibrary,
           onTap: () => PureSidebar._go(context, AppRoutes.library),
         ),
         _MenuItem(
           icon: AppIconName.navRobot,
-          label: 'Robot',
+          label: S.menuRobot,
           onTap: () => PureSidebar._go(context, AppRoutes.robot),
         ),
         _MenuItem(
           icon: AppIconName.navActivity,
-          label: 'Activity history',
+          label: S.menuActivityHistory,
           onTap: () => PureSidebar._go(context, AppRoutes.robotActivity),
         ),
         _MenuItem(
           icon: AppIconName.navNotifications,
-          label: 'Notifications',
+          label: S.menuNotifications,
           badge: unread > 0 ? '$unread' : null,
           onTap: () => PureSidebar._go(context, AppRoutes.notifications),
         ),
@@ -292,12 +328,12 @@ class _Recent extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Recent',
+              Text(S.menuRecent,
                   style: AppTextStyles.labelS
                       .copyWith(color: AppColors.textSecondary)),
               GestureDetector(
                 onTap: () => PureSidebar._go(context, AppRoutes.chats),
-                child: Text('See all',
+                child: Text(S.menuSeeAll,
                     style:
                         AppTextStyles.labelS.copyWith(color: AppColors.textBrand)),
               ),
@@ -328,7 +364,7 @@ class _ChatItem extends StatelessWidget {
               orElse: () => chat.messages.first,
             )
             .text ??
-        'Untitled';
+        S.menuUntitled;
 
     final now = DateTime.now();
     final sameDay = chat.lastActiveAt.year == now.year &&

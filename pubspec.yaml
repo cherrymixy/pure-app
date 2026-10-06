@@ -41,6 +41,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  config:
+    # Swift Package Manager 를 끄고 CocoaPods 만 쓴다.
+    # Flutter 가 만드는 SPM 패키지는 iOS 13.0 으로 고정돼 있는데
+    # fc_native_video_thumbnail 이 14.0 을 요구해서, flutter pub get 뒤
+    # Xcode 에서 바로 빌드하면 패키지 해석이 실패한다.
+    # Podfile 은 이미 platform :ios, '14.0' 이라 pods 경로에는 문제가 없다.
+    enable-swift-package-manager: false
+
   fonts:
     # Pretendard (OFL 1.1). 시안의 Google Sans Flex 대신 쓴다 — 한글까지 한 파일로
     # 덮고 라이선스가 자유롭다. 시안이 쓰는 굵기는 400·500·600 셋이다.

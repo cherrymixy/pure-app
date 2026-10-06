@@ -16,9 +16,10 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
-import '../widgets/gray_box.dart';
 import '../widgets/pure_button.dart';
+import '../widgets/pure_empty.dart';
 import '../widgets/pure_sheet.dart';
+import '../widgets/pure_toast.dart';
 import '../widgets/pure_top_bar.dart';
 
 /// 07-2 모션 상세 — Figma `481:2984`.
@@ -107,7 +108,7 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
     if (next == null || !mounted) return;
     final outcome = await library.rename(motion.id, next);
     if (!mounted) return;
-    showGrayToast(
+    showPureToast(
       context,
       outcome is SaveSucceeded ? S.toastRenamed : S.errorNameTaken,
     );
@@ -135,7 +136,7 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
 
     await context.read<LibraryProvider>().delete(motion.id);
     if (!mounted) return;
-    showGrayToast(context, S.toastDeleted);
+    showPureToast(context, S.toastDeleted);
     Navigator.pop(context);
   }
 
@@ -146,7 +147,7 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
     final opened = await chat.open(motion.chatId);
     if (!mounted) return;
     if (!opened) {
-      showGrayToast(context, 'That chat is gone.');
+      showPureToast(context, 'That chat is gone.');
       return;
     }
     // 대화는 홈 위에 올라간다 — 홈만 남기고 돌아간다.
@@ -168,9 +169,9 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
                 children: [
                   const PureBackBar(),
                   const Expanded(
-                    child: GrayEmptyState(
-                      title: S.toastDeleted,
-                      body: S.emptyLibraryBody,
+                    child: PureNoResults(
+                      title: S.emptyMotionGoneTitle,
+                      body: S.emptyMotionGoneBody,
                     ),
                   ),
                 ],

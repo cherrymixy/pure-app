@@ -16,6 +16,8 @@ abstract final class S {
   static const actionDone = 'Done';
   static const actionRetry = 'Try again';
   static const actionNotNow = 'Not now';
+  static const actionReset = 'Reset';
+  static const actionTurnOff = 'Turn off';
   static const actionOpenSettings = 'Open Settings';
   static const actionPlayOnPurebot = 'Play on Purebot';
   static const actionStop = 'Stop';
@@ -31,13 +33,22 @@ abstract final class S {
 
   // ---------------------------------------------------------------- M 사이드바
   static const menuNewMotion = 'New motion';
+  /// 사이드바 버튼은 앞에 + 를 붙여 쓴다.
+  static const menuNewMotionButton = '+  New motion';
+  /// `{name}` 로봇 이름 · `{status}` 연결 상태.
+  static const menuRobotLine = '{name} / {status}';
   static const menuHome = 'Home';
   static const menuLibrary = 'Library';
   static const menuRobot = 'Robot';
   static const menuActivityHistory = 'Activity history';
-  static const menuRecentChats = 'Recent chats';
+  static const menuNotifications = 'Notifications';
+  /// 사이드바 최근 대화 머리말. 대화 기록 화면의 제목은 `chatHistoryTitle`.
+  static const menuRecent = 'Recent';
   static const menuSeeAll = 'See all';
-  static const menuMeSettings = 'Me · Settings';
+  /// 시안은 가운뎃점이 아니라 슬래시를 쓴다.
+  static const menuMeSettings = 'Me / Settings';
+  /// 사용자 문장이 없는 대화의 이름.
+  static const menuUntitled = 'Untitled';
 
   // ---------------------------------------------------------------- 06 홈
   /// `{name}` 자리에 프로필 이름이 들어간다.
@@ -48,16 +59,22 @@ abstract final class S {
   static const homeGreetingLine2 = 'what’s happening?';
   /// 시안 06-1 의 플레이스홀더 문구.
   static const homeInputHint = 'Say or type…';
+  /// 시안 C-1 `Banner/Offline` 의 자리. 이 앱이 아는 '오프라인' 은 데모 모드다.
+  static const bannerDemoMode = 'Using demo motions';
   static const homeDemoModeOn = 'Demo mode on';
   static const homeDemoModeOff = 'Demo mode off';
 
   // 06-2 입력
+  static const composerAttachTitle = 'Show Purebot a moment';
   static const composerRecordVideo = 'Record a video';
   static const composerChooseFromLibrary = 'Choose from library';
   static const composerTrimTitle = 'Pick 30 seconds';
   static const composerTrimUse = 'Use this clip';
   static const composerListening = 'Listening…';
   static const composerAttachmentRemoved = 'Attachment removed';
+  /// `{start}` `{end}` `{total}` 는 0:00 꼴.
+  static const composerTrimRange = '{start} – {end}  (of {total})';
+  static const composerSelected = '{seconds}s selected';
 
   // 06-3 생성 중
   static const generatingSlow = 'Still working on it…';
@@ -294,6 +311,9 @@ abstract final class S {
   static const emptySearchAction = 'Make it on Home';
   static const emptyNotifications = "You're all caught up";
   static const emptyChatHistory = 'No chats yet';
+  /// 상세로 들어왔는데 그 모션이 이미 지워져 있을 때. 시안에 없는 갈래다.
+  static const emptyMotionGoneTitle = 'This motion is gone';
+  static const emptyMotionGoneBody = 'It was deleted. The rest are in Library.';
 
   // ---------------------------------------------------------------- 오류
   static const errorGenerateFailed = "Couldn't make this motion";
@@ -323,6 +343,12 @@ abstract final class S {
   // ---------------------------------------------------------------- 이름 변경
   /// 시안 07-2 `481:3402`.
   static const renameTitle = 'Rename motion';
+
+  // ---------------------------------------------------------------- 전시 설정
+  /// 09-1 버전을 5번 탭하면 나온다. 시안에 없는 숨은 기능이다.
+  static const devResetTitle = 'Reset demo data?';
+  static const devResetBody =
+      'Everything goes back to the seed state, including the first-run setup.';
 }
 
 /// `{key}` 자리표시자를 채운다.

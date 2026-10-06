@@ -22,12 +22,12 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
-import '../widgets/gray_box.dart';
 import '../widgets/pure_button.dart';
 import '../widgets/pure_chip.dart';
 import '../widgets/pure_list.dart';
 import '../widgets/pure_empty.dart';
 import '../widgets/pure_sheet.dart';
+import '../widgets/pure_toast.dart';
 import '../widgets/pure_sidebar.dart';
 import '../widgets/pure_top_bar.dart';
 import 'signature_screen.dart';
@@ -131,7 +131,7 @@ class RobotScreen extends StatelessWidget {
                         icon: AppIconName.help,
                         label: S.robotHelp,
                         // 전시용 더미 — 도움말 문서는 없다.
-                        onTap: () => showGrayToast(context, S.robotHelp),
+                        onTap: () => showPureToast(context, S.robotHelp),
                       ),
                     ],
                   ),
@@ -462,7 +462,7 @@ class SignatureResetScreen extends StatelessWidget {
     if (!ok || !context.mounted) return;
     await context.read<RobotProvider>().resetSignature();
     if (!context.mounted) return;
-    showGrayToast(context, S.signatureSaved);
+    showPureToast(context, S.signatureSaved);
   }
 
   @override
@@ -599,7 +599,7 @@ class RobotListScreen extends StatelessWidget {
     );
     if (!ok || !context.mounted) return;
     // 더미 — 실제로 지우지는 않는다.
-    showGrayToast(context, S.toastDeleted);
+    showPureToast(context, S.toastDeleted);
   }
 
   @override
@@ -648,7 +648,7 @@ class RobotListScreen extends StatelessWidget {
                         icon: AppIconName.plusRow,
                         label: S.robotAddRobot,
                         // 더미 — 기기를 더 붙일 일은 없다.
-                        onTap: () => showGrayToast(context, S.robotAddRobot),
+                        onTap: () => showPureToast(context, S.robotAddRobot),
                       ),
                     ],
                   ),
@@ -708,7 +708,7 @@ class _FirmwareScreenState extends State<FirmwareScreen> {
           _progress = null;
           _done = true;
         });
-        showGrayToast(context, S.robotUpdateDone);
+        showPureToast(context, S.robotUpdateDone);
         return;
       }
       setState(() => _progress = next);
@@ -977,7 +977,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         .where((m) => m.name == a.motionName)
         .firstOrNull;
     if (motion == null) {
-      showGrayToast(context, S.errorSimFailed);
+      showPureToast(context, S.errorSimFailed);
       return;
     }
     setState(() => _playingId = a.id);

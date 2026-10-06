@@ -11,7 +11,12 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'app_icon.dart';
-import 'gray_box.dart';
+import 'pure_button.dart';
+import 'pure_sheet.dart';
+
+/// [ComposerState.fill] 이 같은 이름을 쓰고 있어서, 문구 채우기는 한 번 감싼다.
+String _fill(String template, Map<String, Object?> values) =>
+    fill(template, values);
 
 /// 06-1 / 06-2 입력창 — 텍스트 · 영상(+) · 마이크.
 ///
@@ -73,25 +78,13 @@ class ComposerState extends State<Composer> {
   // ---------------------------------------------------------------- 영상
 
   Future<void> _openAttachSheet() async {
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.videocam_outlined),
-              title: const Text(S.composerRecordVideo),
-              onTap: () => Navigator.pop(context, 'camera'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text(S.composerChooseFromLibrary),
-              onTap: () => Navigator.pop(context, 'gallery'),
-            ),
-          ],
-        ),
-      ),
+    final choice = await showPureChoice<String>(
+      context,
+      title: S.composerAttachTitle,
+      options: const [
+        PureChoice(label: S.composerRecordVideo, value: 'camera'),
+        PureChoice(label: S.composerChooseFromLibrary, value: 'gallery'),
+      ],
     );
     if (choice == null || !mounted) return;
 
@@ -120,57 +113,71 @@ class ComposerState extends State<Composer> {
 
     return showModalBottomSheet<VideoAttachment>(
       context: context,
+      isScrollControlled: true,
       isDismissible: false,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.bgOverlay,
       builder: (context) => StatefulBuilder(
         builder: (context, setSheet) {
           final end = (start + cap).clamp(0.0, video.durationSec);
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(S.composerTrimTitle,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_mmss(start)} – ${_mmss(end)}  '
-                    '(of ${_mmss(video.durationSec)})',
-                    style: const TextStyle(fontSize: 12, color: Gray.dim),
-                  ),
-                  Slider(
-                    value: start,
-                    max: (video.durationSec - cap).clamp(0.0, video.durationSec),
-                    onChanged: (v) => setSheet(() => start = v),
-                  ),
-                  FilledButton(
-                    onPressed: () {
-                      final range = VideoInputService.clampRange(
-                        start,
-                        start + cap,
-                        video.durationSec,
-                      );
-                      Navigator.pop(
-                        context,
-                        VideoAttachment(
-                          path: video.path,
-                          thumbPath: video.thumbPath,
-                          durationSec: video.durationSec,
-                          trimStart: range.$1,
-                          trimEnd: range.$2,
-                        ),
-                      );
-                    },
-                    child: const Text(S.composerTrimUse),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(S.actionCancel),
-                  ),
-                ],
+          return PureSheet(
+            children: [
+              const SizedBox(height: 22),
+              Text(S.composerTrimTitle, style: AppTextStyles.titleM),
+              const SizedBox(height: 6),
+              Text(
+                _fill(S.composerTrimRange, {
+                  'start': _mmss(start),
+                  'end': _mmss(end),
+                  'total': _mmss(video.durationSec),
+                }),
+                style: AppTextStyles.bodyS.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
+              const SizedBox(height: AppSpacing.x8),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  activeTrackColor: AppColors.bgInverse,
+                  inactiveTrackColor: AppColors.bgDisabled,
+                  thumbColor: AppColors.bgInverse,
+                  overlayColor: AppColors.bgBrandSubtle,
+                ),
+                child: Slider(
+                  value: start,
+                  max: (video.durationSec - cap).clamp(0.0, video.durationSec),
+                  onChanged: (v) => setSheet(() => start = v),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.x8),
+              PureButton(
+                label: S.composerTrimUse,
+                onPressed: () {
+                  final range = VideoInputService.clampRange(
+                    start,
+                    start + cap,
+                    video.durationSec,
+                  );
+                  Navigator.pop(
+                    context,
+                    VideoAttachment(
+                      path: video.path,
+                      thumbPath: video.thumbPath,
+                      durationSec: video.durationSec,
+                      trimStart: range.$1,
+                      trimEnd: range.$2,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 6),
+              PureButton(
+                label: S.actionCancel,
+                variant: PureButtonVariant.subtle,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           );
         },
       ),
@@ -408,8 +415,12 @@ class _VideoChip extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '${video.selectedSec.toStringAsFixed(0)}s selected',
-                style: const TextStyle(fontSize: 12, color: Gray.dim),
+                fill(S.composerSelected, {
+                  'seconds': video.selectedSec.toStringAsFixed(0),
+                }),
+                style: AppTextStyles.bodyS.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
             IconButton(
@@ -423,34 +434,13 @@ class _VideoChip extends StatelessWidget {
 }
 
 /// 01-E1 권한 재요청 시트.
-Future<void> showPermissionSheet(BuildContext context, String title) {
-  return showModalBottomSheet<void>(
-    context: context,
-    builder: (context) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            const Text(S.permBody,
-                style: TextStyle(fontSize: 13, color: Gray.dim)),
-            const SizedBox(height: 16),
-            FilledButton(
-              // 설정 열기는 실제 연결이 필요하다. 회색박스에서는 닫기만 한다.
-              onPressed: () => Navigator.pop(context),
-              child: const Text(S.actionOpenSettings),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(S.actionNotNow),
-            ),
-          ],
-        ),
-      ),
-    ),
+///
+/// 설정 열기는 실제 연결이 필요하다. 전시에서는 닫기만 한다.
+Future<void> showPermissionSheet(BuildContext context, String title) async {
+  await showPureNotice(
+    context,
+    title: title,
+    body: S.permBody,
+    actionLabel: S.actionOpenSettings,
   );
 }

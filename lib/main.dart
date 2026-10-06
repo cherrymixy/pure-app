@@ -13,7 +13,7 @@ import 'repositories/data_repository.dart';
 import 'repositories/local_repository.dart';
 import 'app_routes.dart';
 import 'sim/sim_host.dart';
-import 'widgets/app_shell.dart';
+import 'widgets/demo_mode_toggle.dart';
 import 'services/generation/generation_service.dart';
 import 'services/thumbnail_store.dart';
 import 'services/video_input_service.dart';

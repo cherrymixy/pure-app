@@ -18,9 +18,9 @@ import '../widgets/app_icon.dart';
 import '../widgets/pure_list.dart';
 import '../widgets/pure_empty.dart';
 import '../widgets/pure_sheet.dart';
+import '../widgets/pure_toast.dart';
 import '../widgets/pure_sidebar.dart';
 import '../widgets/pure_top_bar.dart';
-import '../widgets/gray_box.dart';
 
 /// 09-1 마이. 하위 화면은 UI 그대로 껍데기이고 탭 반응만 한다 (PRD §2).
 class MeScreen extends StatefulWidget {
@@ -43,11 +43,11 @@ class _MeScreenState extends State<MeScreen> {
     if (_versionTaps < 5) return;
     _versionTaps = 0;
 
-    final ok = await showGrayConfirm(
+    final ok = await showPureConfirm(
       context,
-      title: 'Reset demo data?',
-      body: 'Everything goes back to the seed state, including the first-run setup.',
-      confirmLabel: 'Reset',
+      title: S.devResetTitle,
+      body: S.devResetBody,
+      confirmLabel: S.actionReset,
     );
     if (!ok || !mounted) return;
 
@@ -67,64 +67,23 @@ class _MeScreenState extends State<MeScreen> {
     context.read<RobotProvider>().refresh();
     context.read<NotificationProvider>().refresh();
 
-    showGrayToast(context, S.toastDemoDataReset);
+    showPureToast(context, S.toastDemoDataReset);
     Navigator.popUntil(context, (r) => r.isFirst);
   }
 
   Future<void> _editName() async {
     final profile = context.read<ProfileProvider>();
-    final controller = TextEditingController(text: profile.name);
-
-    final next = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: SafeArea(
-          child: StatefulBuilder(
-            builder: (context, setSheet) => Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(S.meYourName,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    maxLength: ProfileProvider.nameMax,
-                    onChanged: (_) => setSheet(() {}),
-                    decoration: const InputDecoration(
-                      counterText: '',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    // 같거나 비면 저장이 열리지 않는다 (09-1a).
-                    onPressed: profile.canSaveName(controller.text)
-                        ? () => Navigator.pop(context, controller.text.trim())
-                        : null,
-                    child: const Text(S.actionSave),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(S.actionCancel),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    final next = await showPureRename(
+      context,
+      title: S.meYourName,
+      initial: profile.name,
+      maxLength: ProfileProvider.nameMax,
     );
 
     if (next == null || !mounted) return;
     await profile.rename(next);
     if (!mounted) return;
-    showGrayToast(context, S.toastSaved);
+    showPureToast(context, S.toastSaved);
   }
 
   @override
@@ -418,7 +377,7 @@ class MeAccountScreen extends StatelessWidget {
                         value: S.meAccountChangePasswordBody,
                         // 더미 — 전시 계정은 Apple 로그인뿐이다.
                         onTap: () =>
-                            showGrayToast(context, S.meAccountChangePassword),
+                            showPureToast(context, S.meAccountChangePassword),
                       ),
                     ],
                   ),
