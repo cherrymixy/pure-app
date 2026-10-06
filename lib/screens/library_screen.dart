@@ -32,14 +32,6 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  /// 개발용 — 첫 모션의 상세를 바로 연다. 시뮬레이터를 탭할 수 없어서 둔다.
-  ///   ./scripts/dev.sh install --dart-define=START_ROUTE=/library \
-  ///       --dart-define=DEV_OPEN_DETAIL=true
-  static const bool _devOpenDetail = bool.fromEnvironment('DEV_OPEN_DETAIL');
-
-  /// 개발용 — 저장된 게 있어도 빈 화면을 그린다. `--dart-define=DEV_EMPTY=true`
-  static const bool _devEmpty = bool.fromEnvironment('DEV_EMPTY');
-
   /// 지금 카드 자리에서 재생 중인 모션.
   String? _playingId;
   StreamSubscription<SimEvent>? _sub;
@@ -54,16 +46,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _sub = _sim.events.listen((e) {
         if (e is SimEnded && mounted) setState(() => _playingId = null);
       });
-      if (_devOpenDetail) {
-        final first = context.read<LibraryProvider>().visible.firstOrNull;
-        if (first != null) {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.motionDetail,
-            arguments: first.id,
-          );
-        }
-      }
     });
   }
 
@@ -108,7 +90,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     Navigator.pushNamed(context, AppRoutes.librarySearch),
               ),
             ),
-            if (library.isEmpty || _devEmpty)
+            if (library.isEmpty)
               Expanded(
                 child: PureEmptyState(
                   icon: AppIconName.bookmark,

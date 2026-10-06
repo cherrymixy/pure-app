@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'app_icon.dart';
+import 'press_scale.dart';
 
 /// 홈 상단바 — Figma `480:2069`.
 ///
@@ -86,16 +87,18 @@ class PureRoundButton extends StatelessWidget {
   final double iconSize;
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: AppColors.bgSurface,
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Center(child: AppIcon(icon, size: iconSize)),
+  Widget build(BuildContext context) => PressScale(
+        child: Material(
+          color: AppColors.bgSurface,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(child: AppIcon(icon, size: iconSize)),
+            ),
           ),
         ),
       );

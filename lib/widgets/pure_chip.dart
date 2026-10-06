@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import 'press_scale.dart';
 
 /// Figma `Chip` (`452:4215`) — 추천 답안 · 필터.
 ///
@@ -33,46 +34,51 @@ class PureChip extends StatelessWidget {
 
     return Opacity(
       opacity: dimmed ? 0.45 : 1,
-      child: Material(
-        color: selected ? AppColors.bgInverse : AppColors.bgSurface,
-        shape: const StadiumBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: dimmed ? null : onTap,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              size.paddingX,
-              0,
-              onRemove == null ? size.paddingX : AppSpacing.x8,
-              0,
-            ),
-            child: SizedBox(
-              height: size.height,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: AppTextStyles.labelS.copyWith(
-                      color: selected ? AppColors.textOnInverse : AppColors.textPrimary,
-                    ),
-                  ),
-                  if (onRemove != null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: AppSpacing.x4),
-                      child: InkResponse(
-                        onTap: onRemove,
-                        radius: 16,
-                        child: Icon(
-                          Icons.close,
-                          size: 16,
-                          color: selected
-                              ? AppColors.iconOnInverse
-                              : AppColors.iconSecondary,
-                        ),
+      child: PressScale(
+        enabled: !dimmed && onTap != null,
+        child: Material(
+          color: selected ? AppColors.bgInverse : AppColors.bgSurface,
+          shape: const StadiumBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: dimmed ? null : onTap,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                size.paddingX,
+                0,
+                onRemove == null ? size.paddingX : AppSpacing.x8,
+                0,
+              ),
+              child: SizedBox(
+                height: size.height,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTextStyles.labelS.copyWith(
+                        color: selected
+                            ? AppColors.textOnInverse
+                            : AppColors.textPrimary,
                       ),
                     ),
-                ],
+                    if (onRemove != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.x4),
+                        child: InkResponse(
+                          onTap: onRemove,
+                          radius: 16,
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: selected
+                                ? AppColors.iconOnInverse
+                                : AppColors.iconSecondary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

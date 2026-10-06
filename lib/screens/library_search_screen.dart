@@ -25,10 +25,7 @@ class LibrarySearchScreen extends StatefulWidget {
 }
 
 class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
-  /// 개발용 — 찾는 말을 미리 넣고 연다. `--dart-define=DEV_QUERY=dance`
-  static const String _devQuery = String.fromEnvironment('DEV_QUERY');
-
-  final _query = TextEditingController(text: _devQuery);
+  final _query = TextEditingController();
 
   @override
   void dispose() {

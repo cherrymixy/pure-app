@@ -63,9 +63,9 @@ class _SplashScreenState extends State<SplashScreen> {
     // 첫 실행이면 05 모션 시그니처를 먼저 보여 준다 (부록 D 결정).
     // "Reset demo data" 가 이 플래그도 지우므로 다음 관람객에게 다시 보여 줄 수 있다.
     final onboarded = context.read<RobotProvider>().onboarded;
-    Navigator.pushReplacementNamed(
+    Navigator.pushReplacement(
       context,
-      onboarded ? AppRoutes.home : AppRoutes.signature,
+      AppRoutes.fadeTo(onboarded ? AppRoutes.home : AppRoutes.signature),
     );
   }
 

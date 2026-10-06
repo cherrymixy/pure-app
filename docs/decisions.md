@@ -121,7 +121,7 @@
 - STEP 22 라이브러리 검색(07-3) 번역: 검색창 48(radius 22, 1.5 border/strong) + Cancel, 필터 칩, 결과 수(1 개면 단수형), 이름의 일치 글자는 세이지. 목록 카드는 07-1 과 같은 MotionCard 를 쓴다.
 - STEP 22 삭제·이름변경 시트(07-2) 번역: 공용 PureSheet(위 모서리 28, 좌우 24, 위 10/아래 44, 손잡이 36×5) 위에 showPureConfirm(제목 가운데 + 본문 + 빨간 Delete + Subtle Cancel)과 showPureRename(제목 왼쪽 + 입력 56 with 글자 수 + Save + Cancel)을 올렸다. PureButton 에 danger(status/error) 를 더했다. 삭제 문구는 시안대로 "Delete “이름”?" / "Purebot will stop playing it when … This can’t be undone."
 - STEP 22 빈 상태 둘 번역: 07-1.empty 는 아이콘 칩 64 + Title/M + 두 줄 + 검정 알약(PureEmptyState), 07-3.no_results 는 Title/S + 한 줄 + Secondary L(PureNoResults). 문구도 시안대로 바꿨다 ("Save a motion from Home and it’ll show up here." / "No motions match “dance”"). 결과 없음 화면에는 결과 수 줄을 띄우지 않는다.
-- 개발용 dart-define 목록(전시 빌드에는 없음, STEP 25 에서 정리): START_ROUTE OPEN_DRAWER START_CHIP DEV_AUTO_ANSWER DEV_SAVE_SHEET DEV_OPEN_DETAIL DEV_SHEET DEV_EMPTY DEV_QUERY SIM_SELFTEST.
+- 개발용 dart-define 목록(전시 빌드에는 없음, STEP 25 에서 정리): START_ROUTE OPEN_DRAWER START_CHIP DEV_AUTO_ANSWER DEV_SAVE_SHEET DEV_OPEN_DETAIL DEV_SHEET DEV_EMPTY DEV_QUERY SIM_SELFTEST. → **STEP 25 에서 9개 제거, START_ROUTE·SIM_SELFTEST 만 남겼다.**
 - STEP 22 모션 시그니처(05-1~05-4) 번역: 뒤로 30.69 + Skip / 진행 막대 349.83×6.14(채움 #3d414d) / 로봇 카드 폭 전체 261 radius 29.19 / 답 칩 Wrap / 질문 Title/L 두 줄 / 큰 마이크 66. 선택지가 제목+설명 카드에서 칩으로 바뀌었고 설명 문구는 화면에서 사라졌다. 질문 문구도 시안대로 ("If Purebot were a person…" 등). 편집 모드는 진행 막대와 Skip 이 없다.
 - 시안에서 답 칩이 질문 **위**에 있다. 질문이 큰 마이크 바로 위에 오는 구성이라 그대로 옮겼다.
 - SimSlot 에 borderRadius 를 넘기지 않으면 WebView 가 각지게 나온다 — 바깥 ClipRRect 는 SimHost 가 그리는 WebView 에 먹지 않는다. 시그니처/라이브러리/상세/채팅 네 군데 모두 라운드를 함께 넘기도록 고쳤다.
@@ -150,3 +150,10 @@
 - 시안 `Banner/Offline`(483:21358)을 PureBanner 로 옮기고 홈 상단바 아래에 달았다. 이 앱은 연결 상태를 보지 않으므로 띄우는 조건은 **데모 모드가 켜져 있을 때** 하나다 — 문구 "Using demo motions", 오른쪽 알약은 Turn off.
 - 사이드바·마이에 하드코딩돼 있던 문구를 strings.dart 로 올렸다 (menuHome/Library/Robot/ActivityHistory/Notifications/Recent/SeeAll/MeSettings/Untitled, devResetTitle·Body, composerAttachTitle·TrimRange·Selected, emptyMotionGone*). 시안이 "Me / Settings" 라 menuMeSettings 의 가운뎃점을 슬래시로 고쳤다.
 - [빌드] Swift Package Manager 를 프로젝트 단위로 껐다 (`pubspec.yaml` → flutter.config.enable-swift-package-manager: false). Flutter 가 만드는 SPM 패키지가 iOS 13.0 으로 고정돼 있는데 fc_native_video_thumbnail 이 14.0 을 요구해서, `flutter pub get` 뒤 Xcode 에서 바로 빌드하면 패키지 해석이 실패했다 (flutter build ios 로 들어갈 때만 Flutter 가 14.0 으로 올려 준다). Podfile 은 이미 platform :ios, '14.0' 이라 pods 경로로는 문제가 없다.
+- STEP 24 연출. 길이·커브를 `theme/app_motion.dart` 한 곳에 뒀다 (quick 120 / enter 240 / screen 280 / splashOut 320, easeOutCubic). 시안에 타임라인이 없어 PRD 의 두 값(사이드바 280ms, 스플래시 0.6s·2s)을 기준 삼았다. 모든 길이는 `AppMotion.maybe(context, …)` 를 거쳐 기기의 '동작 줄이기'에서 0 이 된다.
+- `Appear` — 새 말풍선만 흐림에서 또렷해지며 8 올라온다. **key 는 반드시 메시지 id** 여야 한다. key 없이 쓰면 목록이 다시 그려질 때마다 전부 다시 떠올라 화면이 깜빡인다.
+- `PressScale` — 누르는 동안 0.96. 흰 알약이 글로우 위에 떠 있어서 잉크 번짐만으로는 눌린 게 안 보인다. 칩·원형 버튼·입력창 전송 버튼에 붙였다. 탭은 안쪽 InkWell 이 그대로 받고 여기서는 포인터만 본다.
+- 스플래시 → 다음 화면을 페이드로 (`AppRoutes.fadeTo`). 옆에서 밀려들어오면 로고가 튕겨 나가는 것처럼 보인다. onGenerateRoute 를 `_pageFor` 와 라우트 생성으로 쪼갰다.
+- 음성 파형을 막대 다섯 개로. speech_to_text 가 주는 건 음량 하나뿐이라 주파수 분석은 아니다 — 가운데가 크고 바깥이 작게, 막대마다 반응 속도를 달리해서 같이 출렁이지 않게 했다.
+- STEP 25 마감: 개발용 dart-define 9개 제거 (OPEN_DRAWER START_CHIP DEV_AUTO_ANSWER DEV_SAVE_SHEET DEV_PREVIEW DEV_OPEN_DETAIL DEV_SHEET DEV_EMPTY DEV_QUERY). `START_ROUTE`(화면 바로 열기)와 `SIM_SELFTEST`(브리지 자체검사)는 남겼다 — 전시장에서 시뮬이 이상할 때 쓸 진단 도구다.
+- `scripts/install_device.sh` 추가. 릴리스 빌드 → 연결된 아이폰에 설치. 키 읽는 부분은 `scripts/_env.sh` 로 빼서 dev.sh 와 함께 쓴다. 무료 서명 7일 만료와 전시 전 점검 항목을 스크립트가 끝나면서 직접 알려 준다.

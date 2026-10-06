@@ -50,11 +50,6 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
         if (e is SimEnded && mounted) setState(() => _playing = false);
       });
       _play();
-      if (_devSheet == 'delete') {
-        _delete();
-      } else if (_devSheet == 'rename') {
-        _rename();
-      }
     });
   }
 
@@ -286,9 +281,6 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
       await _delete();
     }
   }
-
-  /// 개발용 — 열자마자 시트를 띄운다. `--dart-define=DEV_SHEET=delete`
-  static const String _devSheet = String.fromEnvironment('DEV_SHEET');
 
   /// 시안은 "Saved Oct 4" 꼴로 쓴다.
   static const List<String> _months = [

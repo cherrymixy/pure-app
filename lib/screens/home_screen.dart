@@ -23,9 +23,11 @@ import '../services/video_input_service.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_host.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
+import '../widgets/appear.dart';
 import '../widgets/composer.dart';
 import '../widgets/pure_banner.dart';
 import '../widgets/pure_chip.dart';
@@ -126,23 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 지금 답을 기다리는 중인가. 답하면(칩이든 직접 입력이든) 꺼진다.
   bool _asking = false;
 
-  // ---- 개발용 스위치. 시뮬레이터를 탭할 수 없어서 둔다. 전시 빌드에는 없다.
-
-  /// 사이드바를 연 채로 띄운다.
-  static const bool _openDrawerOnStart = bool.fromEnvironment('OPEN_DRAWER');
-
-  /// 칩을 누른 것처럼 바로 되묻기로 들어간다. `--dart-define=START_CHIP=cameHome`
-  static const String _startChip = String.fromEnvironment('START_CHIP');
-
-  /// 되묻기에 첫 답안으로 자동 응답한다.
-  static const bool _devAutoAnswer = bool.fromEnvironment('DEV_AUTO_ANSWER');
-
-  /// 답장이 나오면 저장 시트를 바로 연다.
-  static const bool _devSaveSheet = bool.fromEnvironment('DEV_SAVE_SHEET');
-
-  /// 답장이 나오면 전체 화면 미리보기를 바로 연다.
-  static const bool _devPreview = bool.fromEnvironment('DEV_PREVIEW');
-
   static String _flat(String label) => label.replaceAll('\n', ' ');
 
   @override
@@ -182,14 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // 이어 보는 대화는 마지막 답장이 보이는 자리에서 시작한다.
     _scrollToEnd();
 
-    if (_openDrawerOnStart) _scaffoldKey.currentState?.openDrawer();
-    if (_startChip.isNotEmpty) {
-      final chip = chipById(_startChip);
-      if (chip != null) {
-        _lastUserText = chip.label;
-        await _startQuestions(chipId: chip.id, text: chip.label);
-      }
-    }
   }
 
   /// 사이드바에서 다른 대화를 열었다 — 이 화면이 들고 있던 것은 전부 비운다.
@@ -234,10 +211,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (!mounted) return;
     _scrollToEnd();
-    if (_devAutoAnswer && mounted) {
-      final first = branch.whenOptions.first;
-      await _answerWhen(first, _flat(first.label));
-    }
   }
 
   Future<void> _onChoice(MessageChoice choice) async {
@@ -281,10 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (!mounted) return;
     _scrollToEnd();
-    if (_devAutoAnswer && mounted) {
-      final first = _branch!.howOptions.first;
-      await _onChoice(MessageChoice(id: first.id, label: _flat(first.label)));
-    }
   }
 
   /// 칩 대신 직접 적거나 말해서 답했다 — 남은 질문은 건너뛰고 바로 만든다.
@@ -342,14 +311,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _activeSpecId = result.spec.id);
     _scrollToEnd();
     await _play(result.spec, capture: true, messageId: pending.id);
-    if (_devSaveSheet && mounted) await _save(result.spec);
-    if (_devPreview && mounted) {
-      await Navigator.pushNamed(
-        context,
-        AppRoutes.preview,
-        arguments: result.spec,
-      );
-    }
   }
 
   void _onSimEvent(SimEvent e) {
@@ -580,8 +541,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!_scroll.hasClients) return;
       _scroll.animateTo(
         _scroll.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
+        duration: AppMotion.maybe(context, AppMotion.screen),
+        curve: AppMotion.easeIn,
       );
     });
   }
@@ -685,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 260),
+                    duration: AppMotion.maybe(context, AppMotion.screen),
                     child: empty
                         ? const _EmptyHome(key: ValueKey('empty'))
                         : _ChatList(
@@ -848,8 +809,9 @@ class _HomeGlow extends StatelessWidget {
       child: IgnorePointer(
         child: AnimatedOpacity(
           opacity: visible ? 1 : 0,
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOut,
+          // 글로우만 일부러 느리다 — 말을 걸면 천천히 물러나야 한다.
+          duration: AppMotion.maybe(context, const Duration(milliseconds: 420)),
+          curve: AppMotion.easeIn,
           child: Image.asset('assets/images/glow_home.png', fit: BoxFit.fill),
         ),
       ),
@@ -892,11 +854,18 @@ class _ChatList extends StatelessWidget {
         ),
         itemCount: messages.length + (typingAhead ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x20),
+        // key 는 반드시 메시지 id — Appear 가 새로 온 것만 띄우게 한다.
         itemBuilder: (context, i) => i < messages.length
-            ? buildMessage(messages[i])
-            : const Align(
-                alignment: Alignment.centerLeft,
-                child: TypingBubble(),
+            ? Appear(
+                key: ValueKey(messages[i].id),
+                child: buildMessage(messages[i]),
+              )
+            : const Appear(
+                key: ValueKey('typing'),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TypingBubble(),
+                ),
               ),
       ),
       _TopFade(visible: scrolled),
@@ -955,7 +924,7 @@ class _TopFade extends StatelessWidget {
     child: IgnorePointer(
       child: AnimatedOpacity(
         opacity: visible ? 1 : 0,
-        duration: const Duration(milliseconds: 180),
+        duration: AppMotion.maybe(context, AppMotion.quick),
         child: const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

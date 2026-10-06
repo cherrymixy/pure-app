@@ -12,6 +12,7 @@ import 'screens/robot_screen.dart';
 import 'screens/signature_screen.dart';
 import 'screens/sim_debug_screen.dart';
 import 'screens/splash_screen.dart';
+import 'theme/app_motion.dart';
 
 /// 화면 경로.
 ///
@@ -63,7 +64,38 @@ abstract final class AppRoutes {
   }
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    Widget page;
+    if (settings.name == preview) {
+      return PageRouteBuilder<void>(
+        settings: settings,
+        opaque: false,
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (_, _, _) =>
+            PreviewScreen(spec: settings.arguments! as MotionSpec),
+      );
+    }
+    final page = _pageFor(settings);
+    if (page == null) return null;
+    return MaterialPageRoute(builder: (_) => page, settings: settings);
+  }
+
+  /// 스플래시에서 넘어갈 때 쓰는 페이드 전환.
+  ///
+  /// 영상이 끝나자마자 옆에서 화면이 밀려들어오면 로고가 튕겨 나가는 것처럼
+  /// 보인다. 같은 자리에서 바뀌어야 한 장면으로 이어진다.
+  static Route<dynamic> fadeTo(String name, {Object? arguments}) {
+    final settings = RouteSettings(name: name, arguments: arguments);
+    final page = _pageFor(settings)!;
+    return PageRouteBuilder<void>(
+      settings: settings,
+      transitionDuration: AppMotion.splashOut,
+      pageBuilder: (_, _, _) => page,
+      transitionsBuilder: (_, animation, _, child) =>
+          FadeTransition(opacity: animation, child: child),
+    );
+  }
+
+  static Widget? _pageFor(RouteSettings settings) {
+    final Widget page;
     switch (settings.name) {
       case splash:
         page = const SplashScreen();
@@ -73,14 +105,6 @@ abstract final class AppRoutes {
         page = const HomeScreen(startNewChat: true);
       case chats:
         page = const ChatHistoryScreen();
-      case preview:
-        return PageRouteBuilder<void>(
-          settings: settings,
-          opaque: false,
-          transitionDuration: const Duration(milliseconds: 220),
-          pageBuilder: (_, _, _) =>
-              PreviewScreen(spec: settings.arguments! as MotionSpec),
-        );
       case signature:
         page = SignatureScreen(
           args: (settings.arguments as SignatureArgs?) ?? const SignatureArgs(),
@@ -118,6 +142,6 @@ abstract final class AppRoutes {
       default:
         return null;
     }
-    return MaterialPageRoute(builder: (_) => page, settings: settings);
+    return page;
   }
 }

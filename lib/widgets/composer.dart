@@ -8,9 +8,11 @@ import '../models/message.dart';
 import '../providers/voice_provider.dart';
 import '../services/video_input_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'app_icon.dart';
+import 'press_scale.dart';
 import 'pure_button.dart';
 import 'pure_sheet.dart';
 
@@ -329,26 +331,29 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: listening ? AppColors.statusError : AppColors.bgInverse,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: 43,
-          height: 43,
-          child: Center(
-            child: listening
-                ? const Icon(Icons.stop, size: 20, color: AppColors.iconOnInverse)
-                : sending
-                    ? const Icon(Icons.arrow_upward,
-                        size: 20, color: AppColors.iconOnInverse)
-                    : const AppIcon(
-                        AppIconName.mic,
-                        size: 22,
-                        color: AppColors.iconOnInverse,
-                      ),
+    return PressScale(
+      enabled: onTap != null,
+      child: Material(
+        color: listening ? AppColors.statusError : AppColors.bgInverse,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 43,
+            height: 43,
+            child: Center(
+              child: listening
+                  ? const Icon(Icons.stop, size: 20, color: AppColors.iconOnInverse)
+                  : sending
+                      ? const Icon(Icons.arrow_upward,
+                          size: 20, color: AppColors.iconOnInverse)
+                      : const AppIcon(
+                          AppIconName.mic,
+                          size: 22,
+                          color: AppColors.iconOnInverse,
+                        ),
+            ),
           ),
         ),
       ),
@@ -356,6 +361,7 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+/// 듣는 중 — 파형 + 실시간 자막 (PRD §2 06-2).
 class _VoiceBar extends StatelessWidget {
   const _VoiceBar({required this.voice});
   final VoiceProvider voice;
@@ -365,16 +371,7 @@ class _VoiceBar extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 8),
         child: Row(
           children: [
-            // 파형 자리 — 음량에 따라 자라는 막대. STEP 24 에서 진짜 파형으로.
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 80),
-              width: 8 + voice.level * 56,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.bgBrand,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            _Waveform(level: voice.level),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -386,6 +383,49 @@ class _VoiceBar extends StatelessWidget {
             ),
           ],
         ),
+      );
+}
+
+/// 막대 다섯 개가 음량을 따라 자란다.
+///
+/// 진짜 주파수 분석은 아니다 — speech_to_text 가 주는 건 음량 하나뿐이다.
+/// 가운데가 가장 크게, 바깥으로 갈수록 작게 움직여서 소리가 입에서 퍼지는
+/// 모양으로 보이게 했다. 막대마다 길이를 달리 둬서 같이 출렁이지 않게 한다.
+class _Waveform extends StatelessWidget {
+  const _Waveform({required this.level});
+
+  /// 0~1.
+  final double level;
+
+  /// 가운데(1)가 가장 크고 바깥(0.35)이 작다.
+  static const List<double> _weights = [0.35, 0.7, 1, 0.7, 0.35];
+
+  /// 막대마다 반응 속도를 조금씩 다르게.
+  static const List<int> _lags = [160, 120, 90, 120, 160];
+
+  @override
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          for (var i = 0; i < _weights.length; i++) ...[
+            if (i > 0) const SizedBox(width: 3),
+            AnimatedContainer(
+              duration: AppMotion.maybe(
+                context,
+                Duration(milliseconds: _lags[i]),
+              ),
+              curve: AppMotion.easeIn,
+              width: 3,
+              // 조용할 때도 4 는 남겨 둔다 — 완전히 사라지면 멈춘 것처럼 보인다.
+              height: 4 + level.clamp(0.0, 1.0) * _weights[i] * 18,
+              decoration: BoxDecoration(
+                color: AppColors.bgBrand,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
+          ],
+        ],
       );
 }
 
