@@ -116,7 +116,12 @@ class _Row extends StatelessWidget {
           onTap: () async {
             await context.read<ChatProvider>().open(chat.id);
             if (!context.mounted) return;
-            Navigator.pushReplacementNamed(context, AppRoutes.chat);
+            // 대화는 홈 위에 올라간다 — 홈만 남기고 돌아간다.
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRoutes.home,
+              (r) => false,
+            );
           },
         ),
       ),

@@ -339,7 +339,7 @@ class _ChatItem extends StatelessWidget {
       onTap: () async {
         await context.read<ChatProvider>().open(chat.id);
         if (!context.mounted) return;
-        PureSidebar._go(context, AppRoutes.chat);
+        PureSidebar._go(context, AppRoutes.home, replace: true);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(

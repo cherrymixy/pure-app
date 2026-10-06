@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'models/motion_spec.dart';
 import 'screens/chat_history_screen.dart';
-import 'screens/chat_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/preview_screen.dart';
 import 'screens/library_screen.dart';
@@ -21,7 +20,6 @@ abstract final class AppRoutes {
   static const splash = '/';
   static const home = '/home';
   static const homeNew = '/home/new';
-  static const chat = '/chat';
   static const chats = '/chats';
   static const preview = '/preview';
   static const signature = '/signature';
@@ -73,8 +71,6 @@ abstract final class AppRoutes {
         page = const HomeScreen();
       case homeNew:
         page = const HomeScreen(startNewChat: true);
-      case chat:
-        page = ChatScreen(entry: settings.arguments as ChatEntry?);
       case chats:
         page = const ChatHistoryScreen();
       case preview:

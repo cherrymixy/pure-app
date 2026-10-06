@@ -32,7 +32,14 @@ class SimHost extends StatefulWidget {
 
 /// 자리 요청 하나.
 class _SlotRequest {
-  _SlotRequest(this.key, this.priority, this.radius, this.viewport, this.route);
+  _SlotRequest(
+    this.key,
+    this.priority,
+    this.radius,
+    this.viewport,
+    this.route,
+    this.scaffold,
+  );
 
   final GlobalKey key;
 
@@ -47,6 +54,9 @@ class _SlotRequest {
   /// 이 자리가 올라탄 라우트. 위에 시트나 다이얼로그가 덮이면 자리를 비운다 —
   /// WebView 는 앱 최상단에 있어서 가만 두면 시트 **위에** 그려진다.
   final ModalRoute<Object?>? route;
+
+  /// 이 자리가 올라탄 Scaffold. 사이드바는 라우트를 쌓지 않아서 따로 본다.
+  final ScaffoldState? scaffold;
 }
 
 class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
@@ -93,6 +103,7 @@ class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
     double radius,
     BuildContext? viewport,
     ModalRoute<Object?>? route,
+    ScaffoldState? scaffold,
   ) {
     final i = _requests.indexWhere((r) => r.key == key);
     if (i >= 0) {
@@ -100,13 +111,14 @@ class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
       if (existing.priority == priority &&
           existing.radius == radius &&
           existing.viewport == viewport &&
-          existing.route == route) {
+          existing.route == route &&
+          existing.scaffold == scaffold) {
         _scheduleUpdate();
         return;
       }
-      _requests[i] = _SlotRequest(key, priority, radius, viewport, route);
+      _requests[i] = _SlotRequest(key, priority, radius, viewport, route, scaffold);
     } else {
-      _requests.add(_SlotRequest(key, priority, radius, viewport, route));
+      _requests.add(_SlotRequest(key, priority, radius, viewport, route, scaffold));
     }
     _scheduleUpdate();
   }
@@ -127,8 +139,11 @@ class SimHostState extends State<SimHost> with SingleTickerProviderStateMixin {
   }
 
   void _applyWinner() {
-    // 시트·다이얼로그가 덮인 라우트의 자리는 셈에서 뺀다.
-    final live = _requests.where((r) => r.route?.isCurrent ?? true).toList();
+    // 시트·다이얼로그·사이드바가 덮은 자리는 셈에서 뺀다 — 가만 두면 WebView 가
+    // 그 위에 그려진다.
+    final live = _requests
+        .where((r) => (r.route?.isCurrent ?? true) && !(r.scaffold?.isDrawerOpen ?? false))
+        .toList();
 
     if (live.isEmpty) {
       if (_rect != null) {
@@ -266,6 +281,7 @@ class _SimSlotState extends State<SimSlot> {
         // 스크롤 안이면 그 뷰포트를 함께 넘긴다 — 밖으로 나간 부분을 잘라 내려고.
         Scrollable.maybeOf(context)?.context,
         ModalRoute.of(context),
+        Scaffold.maybeOf(context),
       );
 
   @override

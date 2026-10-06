@@ -111,3 +111,5 @@
 - STEP 22 저장 시트(06-7) 번역: 손잡이 36×5, 좌우 24 / 위 10 / 아래 44, radius 28, 이름 입력 52·radius 16·bg/surface-muted, 선택지 한 덩어리(radius 18) 안 두 줄(체크 22), 대체 경고(#FFF7EA·radius 14), Primary L 버튼. Figma Button(451:4209) 전체 variant 를 PureButton 으로 옮겼다 (Primary/Inverse/Secondary/Subtle/Text × L·S × Disabled).
 - 저장 시트는 상황을 알고 들어오면(칩·되묻기) 시안대로 "묻지 않고 재생 / 물어보고 재생" 2지선다, 모르고 들어오면(자유 텍스트·영상) 같은 모양으로 상황 4지선다를 보여 준다 — 시안에 없는 갈래라 컴포넌트만 재사용했다. SaveRequest 가 ReactionKind 를 함께 돌려주고 library.save(kind:) 로 넘어간다.
 - 시트·다이얼로그가 뜨면 시뮬레이터가 그 위를 덮던 문제 수정: SimSlot 이 자기 ModalRoute 를 함께 넘기고, SimHost 는 isCurrent 가 아닌 자리를 셈에서 뺀다.
+- 홈과 채팅을 한 화면으로 합쳤다 (승아 결정). 말을 걸면 화면이 넘어가는 대신 글로우·인사말·칩이 사라지고 말풍선이 그 자리를 채운다 (AnimatedSwitcher 260ms / 글로우 420ms). chat_screen.dart 와 /chat 라우트 삭제, 대화 열기는 전부 홈으로 돌아간다. New motion 도 빈 홈으로 시작.
+- 사이드바가 열려도 시뮬레이터가 그 위를 덮던 문제 수정: Drawer 는 라우트를 쌓지 않아 ModalRoute 로는 안 잡힌다. SimSlot 이 Scaffold 도 함께 넘기고 SimHost 가 isDrawerOpen 을 본다.

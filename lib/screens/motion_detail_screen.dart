@@ -173,11 +173,8 @@ class _MotionDetailScreenState extends State<MotionDetailScreen> {
       showGrayToast(context, 'That chat is gone.');
       return;
     }
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      AppRoutes.chat,
-      (r) => r.isFirst,
-    );
+    // 대화는 홈 위에 올라간다 — 홈만 남기고 돌아간다.
+    Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (r) => false);
   }
 
   @override
