@@ -54,6 +54,17 @@ enum AppIconName {
   /// 저장 시트의 고른 표시 (13).
   check('check.svg'),
 
+  // ---- 라이브러리 (07) ----
+
+  /// 상단 돋보기 (18).
+  search('search.svg'),
+
+  /// 자동 재생 표시 번개 (12).
+  zap('zap.svg'),
+
+  /// 목록 썸네일 가운데 작은 재생 (8.47).
+  playThumb('play_thumb.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

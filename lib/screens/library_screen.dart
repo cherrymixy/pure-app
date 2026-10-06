@@ -11,10 +11,19 @@ import '../models/saved_motion.dart';
 import '../providers/library_provider.dart';
 import '../sim/sim_controller.dart';
 import '../sim/sim_host.dart';
-import '../widgets/app_shell.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/gray_box.dart';
+import '../widgets/pure_chip.dart';
+import '../widgets/pure_sidebar.dart';
+import '../widgets/pure_top_bar.dart';
 
-/// 07-1 라이브러리 — 필터 · 자동 재생 그룹 · 카드.
+/// 07-1 라이브러리 — Figma `481:2725`.
+///
+/// 시안 값: 햄버거 + 제목 + 돋보기(44 흰 원) / 필터 칩 세 개(간격 8) /
+/// 목록은 좌우 24, 항목 간격 10, 그룹 사이 8 더.
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
@@ -65,31 +74,41 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     final library = context.watch<LibraryProvider>();
 
-    return AppShell(
-      title: S.libraryTitle,
-      onBack: () => Navigator.pop(context),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.librarySearch),
-        ),
-      ],
-      child: library.isEmpty
-          ? GrayEmptyState(
-              title: S.emptyLibraryTitle,
-              body: S.emptyLibraryBody,
-              actionLabel: S.emptyLibraryAction,
-              onAction: () => Navigator.popUntil(context, (r) => r.isFirst),
-            )
-          : Column(
-              children: [
-                _FilterBar(
-                  value: library.filter,
-                  onChanged: library.setFilter,
-                ),
-                Expanded(child: _list(library)),
-              ],
+    return Scaffold(
+      backgroundColor: AppColors.bgCanvas,
+      drawer: const PureSidebar(),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PureMenuBar(
+              title: S.libraryTitle,
+              trailing: PureRoundButton(
+                icon: AppIconName.search,
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRoutes.librarySearch),
+              ),
             ),
+            if (library.isEmpty)
+              Expanded(
+                child: GrayEmptyState(
+                  title: S.emptyLibraryTitle,
+                  body: S.emptyLibraryBody,
+                  actionLabel: S.emptyLibraryAction,
+                  onAction: () => Navigator.popUntil(context, (r) => r.isFirst),
+                ),
+              )
+            else ...[
+              // 시안: 상단바 아래 17, 칩 묶음 높이 43, 그 아래 11.
+              const SizedBox(height: 17),
+              _FilterBar(value: library.filter, onChanged: library.setFilter),
+              const SizedBox(height: 11),
+              Expanded(child: _list(library)),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -105,15 +124,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.x24,
+        0,
+        AppSpacing.x24,
+        AppSpacing.x24,
+      ),
       children: [
         if (auto.isNotEmpty) ...[
-          const GraySectionLabel(S.libraryAutoGroup),
-          ...auto.map(_card),
+          const _GroupLabel(S.libraryAutoGroup),
+          for (final m in auto) ...[const SizedBox(height: 10), _card(m)],
         ],
         if (others.isNotEmpty) ...[
-          if (auto.isNotEmpty) const SizedBox(height: 4),
-          ...others.map(_card),
+          // 시안: 그룹 사이에 8 이 더 들어간다.
+          SizedBox(height: auto.isEmpty ? 0 : 18),
+          const _GroupLabel(S.saveSheetOnlyWhenIAsk),
+          for (final m in others) ...[const SizedBox(height: 10), _card(m)],
         ],
       ],
     );
@@ -131,7 +157,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
       );
 }
 
-/// 07-1 카드. 재생 중이면 그 자리에서 시뮬레이터가 돈다.
+/// 그룹 머리말 — `PURE/Body/S`, `text/secondary`.
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
+      );
+}
+
+/// 07-1 목록 카드 — 시안 `Motion/…` (`481:2740`).
+///
+/// 시안 값: 흰 바탕 radius 20 · 왼쪽 12 / 오른쪽 14 / 위아래 12 · 간격 14 ·
+/// 썸네일 60(radius 14) · 오른쪽 재생 버튼 36(`bg/surface-muted`).
+///
+/// 재생 중이면 썸네일 자리에서 시뮬레이터가 돈다.
 class MotionCard extends StatelessWidget {
   const MotionCard({
     super.key,
@@ -155,65 +198,67 @@ class MotionCard extends StatelessWidget {
     final isAuto = motion.kind == ReactionKind.auto;
     final situation = motion.situation;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-      decoration: BoxDecoration(
-        color: Gray.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Gray.line),
-      ),
+    // 시안은 자동과 수동 두 가지만 보여 준다. askFirst 는 밀려난 상태라 수동처럼
+    // 보이면 안 되므로 기존 문구를 그대로 쓴다 (reactionLabel 주석 참고).
+    final String line;
+    if (isAuto && situation != null) {
+      line = whenLabel(situation);
+    } else if (motion.kind == ReactionKind.manual) {
+      line = S.libraryManualLine;
+    } else {
+      line = reactionLabel(motion.kind, situation);
+    }
+
+    return Material(
+      color: AppColors.bgSurface,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 72,
-                  height: 54,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      const ColoredBox(color: Color(0xFF0A0A0D)),
-                      if (playing)
-                        const SimSlot(priority: 1)
-                      else
-                        _Thumb(path: motion.spec.thumbnailPath),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
+              _Thumb(motion: motion, playing: playing),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     nameSpan == null
-                        ? Text(motion.name,
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w500))
-                        : Text.rich(nameSpan!,
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        if (isAuto)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 4),
-                            child: Icon(Icons.bolt, size: 13, color: Gray.accent),
-                          ),
-                        Expanded(
-                          child: Text(
-                            reactionLabel(motion.kind, situation),
+                        ? Text(
+                            motion.name,
+                            style: AppTextStyles.bodyLStrong,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isAuto ? Gray.accent : Gray.dim,
+                          )
+                        : Text.rich(
+                            nameSpan!,
+                            style: AppTextStyles.bodyLStrong,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                    const SizedBox(height: AppSpacing.x4),
+                    Row(
+                      children: [
+                        if (isAuto) ...[
+                          const AppIcon(
+                            AppIconName.zap,
+                            size: 12,
+                            color: AppColors.iconBrand,
+                          ),
+                          const SizedBox(width: AppSpacing.x4),
+                        ],
+                        Expanded(
+                          child: Text(
+                            line,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyS.copyWith(
+                              color: isAuto
+                                  ? AppColors.textBrand
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -222,10 +267,8 @@ class MotionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: onPlay,
-                icon: Icon(playing ? Icons.stop : Icons.play_arrow),
-              ),
+              const SizedBox(width: AppSpacing.x8),
+              _PlayButton(playing: playing, onTap: onPlay),
             ],
           ),
         ),
@@ -234,28 +277,79 @@ class MotionCard extends StatelessWidget {
   }
 }
 
+/// 썸네일 60 — 시안은 `bg/inverse` 바탕에 어둡게 덮고 작은 재생 삼각형을 얹는다.
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.path});
-  final String? path;
+  const _Thumb({required this.motion, required this.playing});
+
+  final SavedMotion motion;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
-    final p = path;
-    if (p == null || p.isEmpty) {
-      return const Center(
-        child: Icon(Icons.smart_toy_outlined, size: 20, color: Colors.white24),
-      );
-    }
-    return Image.file(
-      File(p),
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => const Center(
-        child: Icon(Icons.smart_toy_outlined, size: 20, color: Colors.white24),
+    final path = motion.spec.thumbnailPath;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 60,
+        height: 60,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: AppColors.bgInverse),
+            if (playing)
+              const SimSlot(priority: 1)
+            else ...[
+              if (path != null && path.isNotEmpty)
+                Image.file(
+                  File(path),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              const ColoredBox(color: AppColors.bgOverlay),
+              const Center(
+                child: AppIcon(
+                  AppIconName.playThumb,
+                  size: 8.47,
+                  color: AppColors.iconOnInverse,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
+/// 시안 `Button/Play` — 36 원형 `bg/surface-muted`, 아이콘 14.
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({required this.playing, required this.onTap});
+
+  final bool playing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: AppColors.bgSurfaceMuted,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 36,
+            height: 36,
+            child: Center(
+              child: playing
+                  ? const Icon(Icons.stop, size: 14, color: AppColors.iconPrimary)
+                  : const AppIcon(AppIconName.playChip, size: 14),
+            ),
+          ),
+        ),
+      );
+}
+
+/// 시안 `Filter` — `Chip` M 세 개, 간격 8. 고른 것은 검정.
 class _FilterBar extends StatelessWidget {
   const _FilterBar({required this.value, required this.onChanged});
 
@@ -263,20 +357,26 @@ class _FilterBar extends StatelessWidget {
   final ValueChanged<LibraryFilter> onChanged;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-        child: Row(
+  Widget build(BuildContext context) => SizedBox(
+        height: 43,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x24),
           children: [
             for (final f in LibraryFilter.values)
               Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GrayChip(
+                padding: EdgeInsets.only(
+                  right: f == LibraryFilter.values.last ? 0 : AppSpacing.x8,
+                ),
+                child: PureChip(
                   label: switch (f) {
                     LibraryFilter.all => S.libraryFilterAll,
                     LibraryFilter.auto => S.libraryFilterAuto,
                     LibraryFilter.manual => S.libraryFilterManual,
                   },
-                  selected: f == value,
+                  state: f == value
+                      ? PureChipState.selected
+                      : PureChipState.normal,
                   onTap: () => onChanged(f),
                 ),
               ),

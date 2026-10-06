@@ -118,6 +118,8 @@ abstract final class S {
   static const libraryFilterAll = 'All';
   static const libraryFilterAuto = 'Auto';
   static const libraryFilterManual = 'Manual';
+  /// 목록에서 수동 모션의 한 줄 (시안 07-1 `481:2792`).
+  static const libraryManualLine = 'Manual';
   static const libraryAutoGroup = 'Plays automatically';
   static const librarySearchHint = 'Search motions';
   /// `{date}`.

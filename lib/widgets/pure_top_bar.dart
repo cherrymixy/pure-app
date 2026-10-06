@@ -5,6 +5,7 @@ import '../app_routes.dart';
 import '../providers/notification_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import 'app_icon.dart';
 
 /// 홈 상단바 — Figma `480:2069`.
@@ -33,6 +34,71 @@ class PureTopBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 햄버거 + 제목 상단바 — Figma `Top Bar / Main` (`453:4221`).
+///
+/// 시안 07-1 값: 햄버거 44 가 왼쪽 14, 제목이 62 에서 시작(= 14 + 44 + 4),
+/// 오른쪽 버튼은 여백 24. 제목은 `PURE/Title/L` (30/38 Medium).
+class PureMenuBar extends StatelessWidget {
+  const PureMenuBar({super.key, required this.title, this.trailing});
+
+  final String title;
+
+  /// 오른쪽에 붙는 둥근 버튼 (라이브러리의 돋보기 등).
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(14, 13, AppSpacing.x24, 0),
+        child: SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              _MenuButton(onTap: () => Scaffold.of(context).openDrawer()),
+              const SizedBox(width: AppSpacing.x4),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.titleL,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+        ),
+      );
+}
+
+/// 시안 `Button/search` 같은 흰 원형 버튼 (44, radius 22).
+class PureRoundButton extends StatelessWidget {
+  const PureRoundButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    this.iconSize = 18,
+  });
+
+  final AppIconName icon;
+  final VoidCallback onTap;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: AppColors.bgSurface,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(child: AppIcon(icon, size: iconSize)),
+          ),
+        ),
+      );
 }
 
 /// 뒤로가기 상단바 — Figma `Top Bar / Back` (`453:4186`).

@@ -84,6 +84,31 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 위쪽 페이드는 스크롤이 시작돼야 보인다 (시안 06-E1 은 opacity 0).
   bool _scrolled = false;
 
+  /// 로봇이 **생성 말고** 입을 떼기 직전 (되묻는 질문). 생성 답장은 ChatProvider 의
+  /// pending 자리가 점 세 개를 맡지만, 질문은 메시지로 바로 꽂히기 때문에 여기서
+  /// 잠깐 띄운다 — 로봇이 말하기 전에는 늘 점이 구른다 (승아 결정).
+  bool _typingAhead = false;
+
+  /// 점 세 개가 깜빡이고 마는 걸 막는 최소 노출 시간.
+  static const Duration _typingBeat = Duration(milliseconds: 700);
+
+  /// [since] 로부터 [_typingBeat] 가 지나지 않았으면 남은 만큼 기다린다.
+  Future<void> _holdTyping(DateTime since) async {
+    final left = _typingBeat - DateTime.now().difference(since);
+    if (left > Duration.zero) await Future<void>.delayed(left);
+  }
+
+  /// 점 세 개를 띄워 두고 [body] 가 끝날 때까지 기다린다.
+  Future<void> _withTyping(Future<void> Function() body) async {
+    setState(() => _typingAhead = true);
+    _scrollToEnd();
+    final since = DateTime.now();
+    await _holdTyping(since);
+    if (!mounted) return;
+    setState(() => _typingAhead = false);
+    await body();
+  }
+
   SimController get _sim => SimHost.controllerOf(context);
 
   // ------------------------------------------------- 되묻기 (옛 06-9 질문형)
@@ -194,13 +219,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
     await chat.addUserMessage(text: text);
     if (!mounted) return;
-    await chat.addQuestion(
-      text: kStep1Question,
-      choices: [
-        for (final o in branch.whenOptions)
-          MessageChoice(id: o.id, label: _flat(o.label)),
-      ],
+    await _withTyping(
+      () => chat.addQuestion(
+        text: kStep1Question,
+        choices: [
+          for (final o in branch.whenOptions)
+            MessageChoice(id: o.id, label: _flat(o.label)),
+        ],
+      ),
     );
+    if (!mounted) return;
     _scrollToEnd();
     if (_devAutoAnswer && mounted) {
       final first = branch.whenOptions.first;
@@ -238,13 +266,16 @@ class _HomeScreenState extends State<HomeScreen> {
     await chat.addUserMessage(text: label);
     if (!mounted) return;
 
-    await chat.addQuestion(
-      text: kStep2Question,
-      choices: [
-        for (final o in _branch!.howOptions)
-          MessageChoice(id: o.id, label: _flat(o.label)),
-      ],
+    await _withTyping(
+      () => chat.addQuestion(
+        text: kStep2Question,
+        choices: [
+          for (final o in _branch!.howOptions)
+            MessageChoice(id: o.id, label: _flat(o.label)),
+        ],
+      ),
     );
+    if (!mounted) return;
     _scrollToEnd();
     if (_devAutoAnswer && mounted) {
       final first = _branch!.howOptions.first;
@@ -281,6 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() => _delayed = false);
     _scrollToEnd();
+    final typingSince = DateTime.now();
 
     final result = await gen.generate(
       GenerationRequest(
@@ -299,6 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    await _holdTyping(typingSince);
+    if (!mounted) return;
     await chat.completeReply(pending.id, result.spec);
     if (!mounted) return;
     setState(() => _activeSpecId = result.spec.id);
@@ -334,6 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pending = await chat.addPendingReply();
     setState(() => _delayed = false);
     _scrollToEnd();
+    final typingSince = DateTime.now();
 
     var frames = const <String>[];
     if (video != null) {
@@ -360,6 +395,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    await _holdTyping(typingSince);
+    if (!mounted) return;
     await chat.completeReply(pending.id, result.spec);
     if (!mounted) return;
     setState(() => _activeSpecId = result.spec.id);
@@ -388,6 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pending = await chat.addPendingReply();
     setState(() => _delayed = false);
     _scrollToEnd();
+    final typingSince = DateTime.now();
 
     final result = await gen.generate(
       GenerationRequest(
@@ -404,6 +442,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    await _holdTyping(typingSince);
+    if (!mounted) return;
     await chat.completeReply(pending.id, result.spec);
     if (!mounted) return;
     setState(() => _activeSpecId = result.spec.id);
@@ -535,10 +575,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// 칩은 고르는 즉시 보낸다 (승아 결정) — 입력창에 채워 두고 한 번 더 누르게
+  /// 하지 않는다.
   void _onChipTap(HomeChip chip) {
     _pendingChipId = chip.id;
     _fromVoice = false;
-    _composerKey.currentState?.fill(chip.label);
+    _onComposerSend(chip.label, null);
   }
 
   void _onComposerSend(String text, VideoAttachment? video) {
@@ -624,6 +666,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             controller: _scroll,
                             messages: messages,
                             scrolled: _scrolled,
+                            typingAhead: _typingAhead,
                             buildMessage: _buildMessage,
                           ),
                   ),
@@ -788,12 +831,17 @@ class _ChatList extends StatelessWidget {
     required this.controller,
     required this.messages,
     required this.scrolled,
+    required this.typingAhead,
     required this.buildMessage,
   });
 
   final ScrollController controller;
   final List<Message> messages;
   final bool scrolled;
+
+  /// 로봇이 입을 떼기 직전이면 맨 끝에 점 세 개를 붙인다.
+  final bool typingAhead;
+
   final Widget Function(Message) buildMessage;
 
   @override
@@ -808,9 +856,14 @@ class _ChatList extends StatelessWidget {
           AppSpacing.x24,
           AppSpacing.x20,
         ),
-        itemCount: messages.length,
+        itemCount: messages.length + (typingAhead ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x20),
-        itemBuilder: (context, i) => buildMessage(messages[i]),
+        itemBuilder: (context, i) => i < messages.length
+            ? buildMessage(messages[i])
+            : const Align(
+                alignment: Alignment.centerLeft,
+                child: TypingBubble(),
+              ),
       ),
       _TopFade(visible: scrolled),
     ],

@@ -24,6 +24,19 @@ bool isAutoSituation(Situation s) => s != Situation.onlyWhenAsked;
 
 String situationLabel(Situation s) => kSituationLabels[s] ?? '';
 
+/// 라이브러리 목록의 한 줄 — 시안 07-1 의 문구를 그대로 둔다.
+///
+/// 앞글자만 소문자로 바꾸는 식으로 만들면 "When i say I'm tired" 처럼 대명사 I 가
+/// 뭉개진다. 네 줄뿐이라 사전으로 둔다.
+const Map<Situation, String> kWhenLabels = {
+  Situation.comesHome: 'When someone comes home',
+  Situation.tired: "When I say I'm tired",
+  Situation.startled: 'When something startles me',
+  Situation.onlyWhenAsked: 'Only when I ask',
+};
+
+String whenLabel(Situation s) => kWhenLabels[s] ?? situationLabel(s);
+
 /// 라이브러리 카드·상세의 "Plays automatically when …" 문구.
 String playsAutomaticallyWhen(Situation s) =>
     isAutoSituation(s) ? 'Plays automatically when ${_lower(situationLabel(s))}' : 'Only when I ask';

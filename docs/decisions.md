@@ -114,3 +114,6 @@
 - 홈과 채팅을 한 화면으로 합쳤다 (승아 결정). 말을 걸면 화면이 넘어가는 대신 글로우·인사말·칩이 사라지고 말풍선이 그 자리를 채운다 (AnimatedSwitcher 260ms / 글로우 420ms). chat_screen.dart 와 /chat 라우트 삭제, 대화 열기는 전부 홈으로 돌아간다. New motion 도 빈 홈으로 시작.
 - 사이드바가 열려도 시뮬레이터가 그 위를 덮던 문제 수정: Drawer 는 라우트를 쌓지 않아 ModalRoute 로는 안 잡힌다. SimSlot 이 Scaffold 도 함께 넘기고 SimHost 가 isDrawerOpen 을 본다.
 - 스플래시 로고는 정지 이미지가 아니라 영상이었다 (logo_motion_mobile 3). PNG·SVG 로 받으면 빈 그림이 나오던 이유다. Figma export_video 로 프레임째 MP4 를 받아(402×874 · 2.03초 · 32KB) assets/video/splash.mp4 로 넣고 video_player 로 재생한다. 영상이 끝나면 홈으로, 못 열면 2.6초 안전망이 넘긴다.
+- 홈 칩은 고르는 즉시 전송한다 (승아 결정). 입력창에 채워 두고 한 번 더 누르게 하지 않는다.
+- 로봇이 말하기 전에는 늘 점 세 개가 구른다 (승아 결정). 생성 답장은 pending 자리가 맡되 최소 700ms 는 보이게 하고, 되묻는 질문은 메시지로 바로 꽂히므로 화면이 잠깐 띄운다.
+- STEP 22 라이브러리(07-1) 번역: 햄버거+제목(Title/L)+돋보기 44 원형 / 필터 칩 3 (간격 8) / 목록 좌우 24·간격 10·그룹 사이 18. 카드는 흰 바탕 radius 20, 썸네일 60(radius 14, bg/inverse + overlay + 작은 재생), 오른쪽 재생 36(bg/surface-muted). 자동은 번개 12 + 세이지 "When …", 수동은 "Manual". PureMenuBar·PureRoundButton 을 공용으로 뺐다.
