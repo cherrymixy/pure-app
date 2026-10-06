@@ -124,6 +124,14 @@ enum AppIconName {
   /// 새 아이디어 알림 (18).
   sparkle('sparkle.svg'),
 
+  // ---- 전체 화면 미리보기 ----
+
+  /// 미리보기 닫기 (24).
+  closeLarge('close_lg.svg'),
+
+  /// 반복 토글 (14).
+  repeat('repeat.svg'),
+
   // ---- 사이드바 메뉴 ----
 
   navHome('nav_home.svg'),

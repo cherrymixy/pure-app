@@ -139,6 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 답장이 나오면 저장 시트를 바로 연다.
   static const bool _devSaveSheet = bool.fromEnvironment('DEV_SAVE_SHEET');
 
+  /// 답장이 나오면 전체 화면 미리보기를 바로 연다.
+  static const bool _devPreview = bool.fromEnvironment('DEV_PREVIEW');
+
   static String _flat(String label) => label.replaceAll('\n', ' ');
 
   @override
@@ -339,6 +342,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollToEnd();
     await _play(result.spec, capture: true, messageId: pending.id);
     if (_devSaveSheet && mounted) await _save(result.spec);
+    if (_devPreview && mounted) {
+      await Navigator.pushNamed(
+        context,
+        AppRoutes.preview,
+        arguments: result.spec,
+      );
+    }
   }
 
   void _onSimEvent(SimEvent e) {

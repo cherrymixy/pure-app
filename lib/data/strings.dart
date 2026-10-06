@@ -21,6 +21,8 @@ abstract final class S {
   static const actionStop = 'Stop';
   static const actionView = 'View';
   static const actionPlayAgain = 'Play again';
+  /// 전체 화면 미리보기의 반복 토글 (시안 `483:19505`).
+  static const previewLoop = 'Loop';
   static const actionSkip = 'Skip';
   static const actionBack = 'Back';
 
@@ -92,8 +94,14 @@ abstract final class S {
   static const chatHistoryTitle = 'Recent chats';
   static const chatHistoryToday = 'Today';
   static const chatHistoryEarlier = 'Earlier';
-  /// `{count}` 자리에 숫자.
+  /// `{count}` 자리에 숫자. 하나면 [chatHistoryReplyOne].
   static const chatHistoryReplies = '{count} replies';
+  static const chatHistoryReplyOne = '{count} reply';
+  static const chatHistoryNew = 'New';
+  static const chatHistoryDeleteTitle = 'Delete this chat?';
+  static const chatHistoryDeleteBody = 'Saved motions stay in your library.';
+  /// `{replies}` / `{when}` — 시안 06-8 `480:3279`.
+  static const chatHistoryMeta = '{replies} / {when}';
   static const chatHistorySaved = '{count} saved';
 
   // 06-9 질문형

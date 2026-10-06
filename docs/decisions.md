@@ -136,3 +136,5 @@
 - 알림 토글 키를 시안에 맞춰 바꿨다: firmware → robotOffline, autoReactions 추가 (data/seed.dart).
 - [sim 봉인 해제 1회, 승아 승인] 시뮬레이터 무대를 흰색으로. 시안(05·07·08)의 로봇은 흰 바탕 위에 떠 있는데 _ref 웹에서 가져온 무대는 검정 + 마젠타·바이올렛 림이라 카드와 톤이 어긋났다. STAGE #ffffff / 안개 제거 / Hemisphere 위아래 대비(#ffffff↔#b9c4c4) / key 2.8 / 림은 세이지 0.22 / 격자와 바닥면 제거(그림자 판을 깔면 그림자 카메라 밖이 통째로 회색이 된다). window.pure 계약은 손대지 않았고 smoke 13건 그대로 통과.
 - Pretendard SemiBold(600) 추가 (승아 승인). 시안이 08-1 모드 이름과 08-5 활동 이름에 16/15 SemiBold 를 쓴다. AppTextStyles.semiBold 로 그 자리에서만 얹는다.
+- STEP 22 마지막 둘 번역: 대화 기록(06-8, 검정 New 알약 + 그룹 간격 22 + 카드 radius 18 + 저장 배지), 전체 화면 미리보기(06-4.full_screen_preview, bg/canvas 바탕 + 닫기 24 + Loop 알약(세이지 21%) + 354 정사각 + 스크러버 4 + 흰 버튼 56). 미리보기 배경이 검정에서 bg/canvas 로 바뀌었다.
+- STEP 22(컴포넌트·화면 번역) 완료. 00·05·06·07·08·09·10·M 전부 Figma 값으로 옮겼고 회색박스 셸(AppShell)은 main.dart 의 DemoModeToggle 만 남겨 두고 화면에서는 전부 빠졌다.
