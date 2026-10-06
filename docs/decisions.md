@@ -157,3 +157,4 @@
 - 음성 파형을 막대 다섯 개로. speech_to_text 가 주는 건 음량 하나뿐이라 주파수 분석은 아니다 — 가운데가 크고 바깥이 작게, 막대마다 반응 속도를 달리해서 같이 출렁이지 않게 했다.
 - STEP 25 마감: 개발용 dart-define 9개 제거 (OPEN_DRAWER START_CHIP DEV_AUTO_ANSWER DEV_SAVE_SHEET DEV_PREVIEW DEV_OPEN_DETAIL DEV_SHEET DEV_EMPTY DEV_QUERY). `START_ROUTE`(화면 바로 열기)와 `SIM_SELFTEST`(브리지 자체검사)는 남겼다 — 전시장에서 시뮬이 이상할 때 쓸 진단 도구다.
 - `scripts/install_device.sh` 추가. 릴리스 빌드 → 연결된 아이폰에 설치. 키 읽는 부분은 `scripts/_env.sh` 로 빼서 dev.sh 와 함께 쓴다. 무료 서명 7일 만료와 전시 전 점검 항목을 스크립트가 끝나면서 직접 알려 준다.
+- 실기기에서 "설치는 되는데 안 열린다" 의 정체: **프로파일 신뢰**였다. `devicectl ... --console` 로 띄워야 이유가 보인다 — `FBSOpenApplicationErrorDomain error 3: ... its profile has not been explicitly trusted by the user`. 아이콘을 눌렀을 때는 화면에 아무 설명도 안 나와서 크래시처럼 보인다. 무료 서명은 그 개발자의 앱이 기기에서 전부 사라지면 신뢰 기록도 같이 지워지는데, install_device.sh 가 기존 앱을 지우고 새로 깔기 때문에 **설치할 때마다** 다시 눌러야 한다. 스크립트 안내와 docs/exhibition.md 를 그렇게 고쳤다.
