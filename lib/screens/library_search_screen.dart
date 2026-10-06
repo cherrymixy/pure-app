@@ -9,7 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
-import '../widgets/gray_box.dart';
+import '../widgets/pure_empty.dart';
 import '../widgets/pure_chip.dart';
 import 'library_screen.dart';
 
@@ -25,7 +25,10 @@ class LibrarySearchScreen extends StatefulWidget {
 }
 
 class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
-  final _query = TextEditingController();
+  /// 개발용 — 찾는 말을 미리 넣고 연다. `--dart-define=DEV_QUERY=dance`
+  static const String _devQuery = String.fromEnvironment('DEV_QUERY');
+
+  final _query = TextEditingController(text: _devQuery);
 
   @override
   void dispose() {
@@ -79,7 +82,8 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
             const SizedBox(height: AppSpacing.x16),
             _FilterRow(value: library.filter, onChanged: library.setFilter),
             const SizedBox(height: 11),
-            if (q.isNotEmpty)
+            // 시안 07-3.no_results 에는 결과 수 줄이 없다.
+            if (q.isNotEmpty && results.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.x24,
@@ -101,11 +105,11 @@ class _LibrarySearchScreenState extends State<LibrarySearchScreen> {
               ),
             Expanded(
               child: q.isNotEmpty && results.isEmpty
-                  ? GrayEmptyState(
-                      title: S.emptySearchTitle,
+                  ? PureNoResults(
+                      title: fill(S.emptySearchTitle, {'query': q}),
                       body: S.emptySearchBody,
                       actionLabel: S.emptySearchAction,
-                      // 검색어를 들고 홈으로 간다.
+                      // 찾던 말을 들고 홈으로 간다.
                       onAction: () =>
                           Navigator.popUntil(context, (r) => r.isFirst),
                     )

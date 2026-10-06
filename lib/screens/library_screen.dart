@@ -15,7 +15,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_icon.dart';
-import '../widgets/gray_box.dart';
+import '../widgets/pure_empty.dart';
 import '../widgets/pure_chip.dart';
 import '../widgets/pure_sidebar.dart';
 import '../widgets/pure_top_bar.dart';
@@ -36,6 +36,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   ///   ./scripts/dev.sh install --dart-define=START_ROUTE=/library \
   ///       --dart-define=DEV_OPEN_DETAIL=true
   static const bool _devOpenDetail = bool.fromEnvironment('DEV_OPEN_DETAIL');
+
+  /// 개발용 — 저장된 게 있어도 빈 화면을 그린다. `--dart-define=DEV_EMPTY=true`
+  static const bool _devEmpty = bool.fromEnvironment('DEV_EMPTY');
 
   /// 지금 카드 자리에서 재생 중인 모션.
   String? _playingId;
@@ -105,9 +108,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     Navigator.pushNamed(context, AppRoutes.librarySearch),
               ),
             ),
-            if (library.isEmpty)
+            if (library.isEmpty || _devEmpty)
               Expanded(
-                child: GrayEmptyState(
+                child: PureEmptyState(
+                  icon: AppIconName.bookmark,
                   title: S.emptyLibraryTitle,
                   body: S.emptyLibraryBody,
                   actionLabel: S.emptyLibraryAction,
@@ -132,8 +136,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final others = library.others;
 
     if (auto.isEmpty && others.isEmpty) {
-      return const GrayEmptyState(
-        title: S.emptySearchTitle,
+      // 필터를 걸어 아무것도 안 남은 경우.
+      return PureNoResults(
+        title: fill(S.emptySearchTitle, {'query': _filterName(library.filter)}),
         body: S.emptySearchBody,
       );
     }
@@ -159,6 +164,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ],
     );
   }
+
+  static String _filterName(LibraryFilter f) => switch (f) {
+    LibraryFilter.all => S.libraryFilterAll,
+    LibraryFilter.auto => S.libraryFilterAuto,
+    LibraryFilter.manual => S.libraryFilterManual,
+  };
 
   Widget _card(SavedMotion motion) => MotionCard(
         motion: motion,

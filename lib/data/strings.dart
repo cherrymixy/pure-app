@@ -177,11 +177,14 @@ abstract final class S {
   static const toastDemoDataReset = 'Demo data reset';
 
   // ---------------------------------------------------------------- 빈 화면
+  // 시안 07-1.empty `481:2940` / `481:2941`.
   static const emptyLibraryTitle = 'No motions yet';
-  static const emptyLibraryBody = 'Tell Purebot what happened and save what you like.';
+  static const emptyLibraryBody =
+      'Save a motion from Home and\nit\u2019ll show up here.';
   static const emptyLibraryAction = 'Go to Home';
-  static const emptySearchTitle = 'No matches';
-  static const emptySearchBody = 'Try another word, or make a new one.';
+  // 시안 07-3.no_results `482:5135` / `482:5136`. `{query}` 는 찾던 말.
+  static const emptySearchTitle = 'No motions match \u201c{query}\u201d';
+  static const emptySearchBody = 'Try another word, or make it on Home.';
   static const emptySearchAction = 'Make it on Home';
   static const emptyNotifications = "You're all caught up";
   static const emptyChatHistory = 'No chats yet';
