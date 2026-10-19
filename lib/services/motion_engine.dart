@@ -195,7 +195,7 @@ abstract final class MotionEngine {
   /// GPT 가 낸 레시피를 안전한 형태로 만든다.
   ///
   /// OpenAI 의 strict 스키마는 minimum/maximum/maxItems 를 지원하지 않는다. 범위를
-  /// 지키게 하는 곳은 여기뿐이다 (CLAUDE.md 규칙 10).
+  /// 지키게 하는 곳은 여기뿐이다 (docs/conventions.md 규칙 10).
   ///
   /// 잘못된 단계는 버리고, 범위 밖 값은 자른다. 남은 단계가 없으면 실패다.
   static ValidationResult<Recipe> validateRecipe(Recipe input) {

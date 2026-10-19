@@ -4,7 +4,7 @@
 
 | 날짜 | STEP | 결정 · 결과 |
 |---|---|---|
-| 2026-10-06 | 0 | 시작 전 세팅 완료. 폴더 구조 플레이북대로 정리(CLAUDE.md 루트, `_ref/pure-web`), git init(main), .gitignore에 `_ref/` 제외. Figma MCP 연결 확인(whoami OK, 파일 `xp0RmyE9WwsNFAF5kE88OX` 3개 페이지 접근 가능). iOS 시뮬레이터 iPhone 17 Pro / iOS 26.2 부팅. Flutter 3.44.2 · Dart 3.12.2 · Xcode 26.2 · CocoaPods 1.16.2 · Node 25.9.0. |
+| 2026-10-06 | 0 | 시작 전 세팅 완료. 폴더 구조 정리(`_ref/pure-web`), git init(main), .gitignore에 `_ref/` 제외. Figma MCP 연결 확인(whoami OK, 파일 `xp0RmyE9WwsNFAF5kE88OX` 3개 페이지 접근 가능). iOS 시뮬레이터 iPhone 17 Pro / iOS 26.2 부팅. Flutter 3.44.2 · Dart 3.12.2 · Xcode 26.2 · CocoaPods 1.16.2 · Node 25.9.0. |
 | 2026-10-06 | 0 | 전시 기기 확정: iPhone 14 Pro(393×852pt), 개발자 모드 ON, 무료 서명 사용(7일 만료 → 전시 전날 재설치). OpenAI 키 확보 완료(STEP 7에서 사용). 시뮬레이터도 14 Pro로 교체. |
 | 2026-10-06 | 0 | 부록 D 13개 항목 전부 추천대로 승인. 신규 6건 포함: Clip 모양은 부록 B(관절별 트랙) 채택 / reasoning 영어 / Figma 402 vs 기기 393은 비율 번역 / stop()은 setIdle 전환 / joint_ranges.dart 폐기. |
 | 2026-10-06 | 0 | 부록 B 계약 수정 3건 승인: (가) Clip 어댑터 + loop 기본값 명시 (나) setFace 유효 이름을 faces.json 값에서 도출 (다) ready 이벤트에 limits 실어 관절 범위를 런타임 전달. |
@@ -31,7 +31,7 @@
 | 2026-10-06 | 3 | **함정 1 — Flutter 의 폴더 에셋 선언은 하위 폴더를 포함하지 않는다.** `- assets/sim/` 만 적어서 index.html 만 번들에 들어가고 JS·wasm·모델·mp4 가 전부 빠졌다. 로컬 서버는 그래도 **200 에 0바이트**를 돌려줘서 에러 없이 로딩 화면에 멈춘다. 7개 폴더를 모두 선언하고, build_sim.sh 가 매 빌드마다 `find` 결과와 pubspec 을 대조해 빠진 줄을 출력하고 실패하도록 했다. |
 | 2026-10-06 | 3 | 함정 2 — iOS 시뮬레이터는 맥의 네트워크를 공유하므로 맥에서 8080 을 쓰는 프로세스(종료 안 된 이전 빌드 포함)와 충돌한다. 실기기에서는 안 생긴다. `start()` 실패를 "이미 떠 있음"으로 뭉뚱그리지 않고, 그 포트에서 실제로 우리 번들(`id="stage"`)이 나오는지 확인해 가른다. 아니면 포트 번호를 적어 실패를 표시. |
 | 2026-10-06 | 3 | 검증: `--dart-define=SIM_SELFTEST=true` 로 빌드하면 ready 직후 브리지 전체를 자동 실행하고 로그로 결과를 낸다. **iPhone 14 Pro / iOS 26.2 시뮬레이터에서 15건 전부 통과** — 동작 15·얼굴 7, head_tilt (-33,42), playBehavior→ended, playRecipe, setFace, capture 138KB, setIdle, 허용목록 밖 이름 throw, playClip(head_pan) 동작, 내부 이름(wrist_roll) 거부, 표정 mp4 readyState=4·480px·currentTime 0.00→0.82s 흐름, stop. |
-| 2026-10-06 | 3 | **`sim/` 봉인** (CLAUDE.md 규칙 3). 이후 외부와의 계약은 `sim/src/api.ts` 의 window.pure 하나이며 변경은 사람 승인 사항. |
+| 2026-10-06 | 3 | **`sim/` 봉인** (docs/conventions.md 규칙 3). 이후 외부와의 계약은 `sim/src/api.ts` 의 window.pure 하나이며 변경은 사람 승인 사항. |
 | 2026-10-06 | 4 | 데이터 모델 11개 (`models/`) — PRD §7 그대로, 전부 toJson/fromJson. Recipe·Clip 의 toJson 은 **window.pure 계약 모양 그대로**라 sim_controller 가 변환 없이 넘긴다. Clip 의 관절 키는 계약 이름(head_pan 등)이며 sim 내부 채널명을 쓰면 api.ts 가 거부한다. 선택 필드는 null 일 때 키 자체를 빼서 보낸다. |
 | 2026-10-06 | 4 | 콘텐츠 8개 (`data/`) — behaviors(허용 목록 15·7·이징 7·관절 5·동작→표정 매핑), chips(5), situations(4), question_tree(칩별 when/how 각 3 + 폴백), signature_options(성격·관계·표현 3×3 + 축 매핑), strings(영어 문구 키), demo_recipes(칩 5 + 리프 15 + 폴백), seed(프로필·로봇·라이브러리 3·알림 3·행동기록 4·로봇탭 더미). |
 | 2026-10-06 | 4 | 🟡 질문 트리 문구는 PRD 에 패턴과 예시 하나만 있어 나머지를 작성했다. 전시 대본 확정 시 `data/question_tree.dart` 만 고치면 된다. 데모 레시피는 조합 45개를 다 쓰지 않고 **2단계 답(how) 기준 15개**로 두고 없으면 칩 기본으로 폴백한다. |
@@ -61,7 +61,7 @@
 | 2026-10-06 | 9 | 최종 결과 전달에 **중복 방지 잠금**을 뒀다. `isFinal` 결과와 `done` 상태가 둘 다 올 수 있어, 막지 않으면 질문형에서 같은 답이 두 번 전송돼 단계를 건너뛴다. 테스트로 고정. |
 | 2026-10-06 | 9 | 테스트 180건 통과(+17). 음성 인식 자체는 **실기기에서만** 의미 있게 확인된다(시뮬레이터 마이크는 신뢰 불가) — 플러그인 호출을 제외한 상태 전이·스트림 배선·소비자 분기를 `@visibleForTesting` 통로로 검증한다. |
 | 2026-10-06 | 10-① | 셸 + 스플래시 + 사이드바 + 홈 + 입력창. `widgets/gray_box.dart`(칩·빈화면·토스트·확인시트), `widgets/app_shell.dart`(햄버거·로봇 상태·알림 종·사이드바), `widgets/composer.dart`(텍스트·영상·마이크), `screens/{splash,home,placeholder}_screen.dart`, `app_routes.dart`. |
-| 2026-10-06 | 10-① | **`sim/sim_host.dart` — 시뮬레이터 인스턴스 1개 유지 구조** (CLAUDE.md 규칙 14). WebView 를 앱 최상단 Stack 에 한 번만 띄우고, 화면이 `SimSlot` 으로 자리를 알려 주면 그 위로 옮긴다. 자리가 없으면 화면 밖으로 치우되 **없애지 않는다** — 없애면 10MB wasm 을 다시 컴파일한다. 여러 자리가 겹치면 priority 가 큰 쪽(전체화면 10 > 카드 0)이 이긴다. 슬라이스 ②④⑤ 가 이걸 쓴다. |
+| 2026-10-06 | 10-① | **`sim/sim_host.dart` — 시뮬레이터 인스턴스 1개 유지 구조** (docs/conventions.md 규칙 14). WebView 를 앱 최상단 Stack 에 한 번만 띄우고, 화면이 `SimSlot` 으로 자리를 알려 주면 그 위로 옮긴다. 자리가 없으면 화면 밖으로 치우되 **없애지 않는다** — 없애면 10MB wasm 을 다시 컴파일한다. 여러 자리가 겹치면 priority 가 큰 쪽(전체화면 10 > 카드 0)이 이긴다. 슬라이스 ②④⑤ 가 이걸 쓴다. |
 | 2026-10-06 | 10-① | 스플래시 2초 동안 시뮬레이터가 뒤에서 wasm 을 올린다(STEP 25 전시 설정 선반영). 첫 실행 → 05 분기는 **슬라이스 ④ 에서** 붙인다 — 그전에 분기를 넣으면 아직 없는 화면에 갇힌다(한 번 그렇게 만들었다가 고침). |
 | 2026-10-06 | 10-① | 로봇 이름 5번 탭 → 데모 모드 토글. 탭 간격이 2초 넘으면 처음부터 센다(실수로 쌓이는 것 방지). 셸이 생성 Provider 를 직접 알 필요가 없어 `DemoModeToggle` InheritedWidget 으로 콜백만 내려 보낸다. |
 | 2026-10-06 | 10-① | 칩 탭은 입력창을 **채우기만** 한다(PRD §4 06-1). 영상 30초 초과 시 Trim 시트에서 시작점만 고르고 끝은 +30초로 고정 — 구간 값만 저장하고 파일은 안 자른다. 아직 안 만든 화면은 `PlaceholderScreen` 이 어느 슬라이스에서 채워지는지 표시한다. |
@@ -88,7 +88,7 @@
 | 2026-10-06 | 11 | 통합 테스트 `test/integration_test.dart` — 화면이 부르는 순서 그대로 엮은 7개 시나리오 16건. 생성은 FakeClient, 시계는 주입, 저장소는 임시 폴더의 진짜 파일. 플레이북 지정 항목을 모두 덮는다: 해피패스(시그니처→칩→질문형→저장→Auto 그룹), 같은 상황 두 번째 저장 시 askFirst 강등, 피드백 버전 누적과 v1 저장, 실패 5종 데모 폴백, 시그니처 스냅샷 불변, 이름·Rename·Delete·editCount, Reset demo data. |
 | 2026-10-06 | 11 | 테스트가 잡은 것: 해피패스에서 'Welcome home' 로 저장하면 **시드와 중복이라 거부**된다 — 저장 시트가 쓰는 `suggestName(taken:)` 로 'Welcome home 2' 가 제안되는 게 실제 동작이고, 테스트를 그 흐름에 맞췄다. |
 | 2026-10-06 | 11 | 동결 전 정리: 분석 7건(BuildContext async gap, null-aware element, 테스트 다중 언더스코어)을 전부 해소해 **analyze 0건**. 쓰이지 않게 된 `placeholder_screen.dart` 삭제. TODO/FIXME·skip·only 없음. |
-| 2026-10-06 | 11 | **v0.1-logic 동결.** 테스트 197건, 분석 0건, 시뮬레이터 예외 0건. 이후 디자인 패스(STEP 20~25)에서는 `models/ services/ repositories/ providers/ data/ sim/` 를 수정하지 않는다 (CLAUDE.md 규칙 2). |
+| 2026-10-06 | 11 | **v0.1-logic 동결.** 테스트 197건, 분석 0건, 시뮬레이터 예외 0건. 이후 디자인 패스(STEP 20~25)에서는 `models/ services/ repositories/ providers/ data/ sim/` 를 수정하지 않는다 (docs/conventions.md 규칙 2). |
 | 2026-10-06 | 20 | 디자인 토큰. Figma Design System 페이지에서 `get_variable_defs` 로 읽어 `lib/theme/` 5개 파일 생성 — app_colors(primitives 38 + semantic 32), app_text_styles(12종), app_spacing(간격 9 + 라운드 6), app_effects(그림자 2 + 블러 + 글로우), app_theme(ThemeData). 표는 `docs/tokens.md`. 추측값 없음. |
 | 2026-10-06 | 20 | **브랜드 색은 세이지 `#789ba2` 다.** PRD §11 은 "홈 배경의 블루 라디얼 글로우, 블루 원형 마이크"라고 적고 있으나 Figma 의 `bg/brand-glow` 는 `sage/200 #a9c2c7` 이고 파랑(`blue/500`)은 `status/live` 한 군데에만 쓰인다. 화면 SSOT 는 Figma 이므로 세이지를 따른다 — PRD 문구가 오래된 것으로 본다. |
 | 2026-10-06 | 20 | **폰트는 `Google Sans Flex`** (부록 D 🟡 해소). 12개 스타일 전부 자간 0, 행간은 px 로 적혀 있어 Flutter 의 배수로 환산했다. 파일 임베드는 STEP 21. 한글 입력 대비 `Apple SD Gothic Neo` 폴백을 둔다. |

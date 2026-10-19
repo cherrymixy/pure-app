@@ -2,7 +2,7 @@
 ///
 /// 오프라인·생성 실패·강제 토글일 때 입력을 키워드로 매칭해 가장 가까운 걸 재생한다
 /// (매칭 로직은 STEP 6 의 motion_engine.demoMatch). 전시장 와이파이가 죽어도
-/// 시연 경로는 살아 있어야 한다 (CLAUDE.md 규칙 11).
+/// 시연 경로는 살아 있어야 한다 (docs/conventions.md 규칙 11).
 ///
 /// 동작·표정 이름은 전부 data/behaviors.dart 허용 목록 안이다.
 library;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// 색 토큰 — Figma `F / Color` (노드 458:4287) 에서 그대로 옮겼다.
 ///
-/// 라이트 테마만 쓴다(PRD 부록 D). 위젯에 hex 를 쓰지 않는다 (CLAUDE.md 규칙 9).
+/// 라이트 테마만 쓴다(PRD 부록 D). 위젯에 hex 를 쓰지 않는다 (docs/conventions.md 규칙 9).
 ///
 /// 두 층이다:
 ///  - **Primitives** — 팔레트 원색. 화면에서 직접 쓰지 않는다.

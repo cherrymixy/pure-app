@@ -14,7 +14,7 @@ import 'openai_client.dart';
 /// 취소한다" 는 전부 여기 모인다. 구현 세 개에 같은 코드를 세 번 넣지 않기 위해서다.
 ///
 /// **이 서비스는 실패를 던지지 않는다.** 무슨 일이 있어도 데모 레시피로 답을 만든다
-/// (CLAUDE.md 규칙 11). 호출부가 실패를 다뤄야 하는 경우는 취소뿐이다.
+/// (docs/conventions.md 규칙 11). 호출부가 실패를 다뤄야 하는 경우는 취소뿐이다.
 class GenerationService {
   GenerationService({
     GenerationClient? primary,

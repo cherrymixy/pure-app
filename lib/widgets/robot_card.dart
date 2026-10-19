@@ -36,7 +36,7 @@ const Color _mediaScrim = Color(0x33000000);
 /// 길이 표시는 왼쪽 12 · 아래 12 에 `PURE/Body/L Strong` 흰 글씨.
 ///
 /// 시뮬레이터는 앱에 하나뿐이라 **활성 말풍선 하나만** 실제 3D 를 보여 준다
-/// (CLAUDE.md 규칙 14). 나머지는 저장해 둔 썸네일을 깐다.
+/// (docs/conventions.md 규칙 14). 나머지는 저장해 둔 썸네일을 깐다.
 class RobotCard extends StatelessWidget {
   const RobotCard({
     super.key,

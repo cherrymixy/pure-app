@@ -14,7 +14,7 @@ import 'generation_client.dart';
 /// OpenAI 호출.
 ///
 /// 서버가 없다. 앱이 직접 부른다. 키는 `--dart-define` 으로만 들어오고 코드·git·로그에
-/// 남지 않는다 (CLAUDE.md 규칙 12).
+/// 남지 않는다 (docs/conventions.md 규칙 12).
 class OpenAIClient implements GenerationClient {
   OpenAIClient({http.Client? httpClient, this.endpoint = _defaultEndpoint})
       : _http = httpClient ?? http.Client();

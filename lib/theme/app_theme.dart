@@ -7,7 +7,7 @@ import 'app_text_styles.dart';
 /// 토큰을 [ThemeData] 로 묶는다.
 ///
 /// 라이트 전용 (PRD 부록 D). 화면·위젯은 색과 치수를 직접 쓰지 않고 토큰이나
-/// 이 테마를 통해 받는다 (CLAUDE.md 규칙 9).
+/// 이 테마를 통해 받는다 (docs/conventions.md 규칙 9).
 abstract final class AppTheme {
   static ThemeData get light {
     const scheme = ColorScheme.light(

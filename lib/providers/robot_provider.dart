@@ -8,7 +8,7 @@ import '../repositories/data_repository.dart';
 ///
 /// 시그니처가 바뀌면 대기 모션이 즉시 바뀌어야 한다 (05-1). 그 반영은 화면이
 /// [signature] 를 보고 SimController.setIdle 을 부르는 식으로 붙는다 — 여기서는
-/// 시뮬레이터를 직접 건드리지 않는다 (CLAUDE.md 규칙 2 대비, 계층 분리).
+/// 시뮬레이터를 직접 건드리지 않는다 (docs/conventions.md 규칙 2 대비, 계층 분리).
 class RobotProvider extends ChangeNotifier {
   RobotProvider(this._repo);
 

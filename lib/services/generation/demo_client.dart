@@ -7,7 +7,7 @@ import 'generation_client.dart';
 /// 네트워크·키 없이 도는 길.
 ///
 /// 입력을 키워드로 매칭해 가장 가까운 데모 레시피를 돌려준다. **절대 실패하지 않는다** —
-/// 전시장 와이파이가 죽어도 시연 경로는 살아 있어야 한다 (CLAUDE.md 규칙 11).
+/// 전시장 와이파이가 죽어도 시연 경로는 살아 있어야 한다 (docs/conventions.md 규칙 11).
 class DemoClient implements GenerationClient {
   DemoClient({this.thinkingDelay = const Duration(milliseconds: 1500)});
 

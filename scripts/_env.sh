@@ -1,7 +1,7 @@
 # .env.local 에서 키를 읽어 DEFINES 배열에 --dart-define 꼴로 담는다.
 #
 # dev.sh 와 install_device.sh 가 함께 쓴다. 값은 **절대 출력하지 않는다** —
-# 터미널 기록·스크린샷·로그 어디에도 키가 남으면 안 된다 (CLAUDE.md 규칙 12).
+# 터미널 기록·스크린샷·로그 어디에도 키가 남으면 안 된다 (docs/conventions.md 규칙 12).
 #
 # source 로 불러 쓴다. ROOT 가 먼저 정해져 있어야 한다.
 

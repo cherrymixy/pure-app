@@ -13,7 +13,7 @@ import 'thumbnail_store.dart';
 /// 영상을 고르거나 찍고, 프레임을 뽑아 GPT 에 보낼 수 있게 만든다.
 ///
 /// 원본 파일은 앱 밖으로 나가지 않는다. API 로 가는 것은 추출한 프레임뿐이다
-/// (CLAUDE.md 규칙 12).
+/// (docs/conventions.md 규칙 12).
 class VideoInputService {
   VideoInputService({
     ImagePicker? picker,
