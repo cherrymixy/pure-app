@@ -330,13 +330,11 @@ echo 'OPENAI_API_KEY=sk-...' > .env.local   # 값은 출력되지 않아요
 
 ## 👥 팀
 
-<img src="docs/deck/18_team.jpg" width="100%" alt="Team member role allocation — Shared Direction, Defined Responsibilities"/>
-
 UX 설계와 검증은 셋이 함께 맡고, 제품 · 브랜드 · 인터페이스 · 모션 · 사운드 · 개발을 나눠 하나의 PURE 경험으로 이었어요.
 
 | 이름 | 역할 |
 |---|---|
-| **전승아** SeungA Jeon | Sound Effect Design · Visual & UI Design · Vibe Coding(앱 · 웹 구현) |
+| **전승아** SeungA Jeon | Sound Effect Design · Visual & UI/GUI Design · Vibe Coding(앱 · 웹 구현) |
 | **최성근** Seonggeun Choi | Face UI Design · Promotion Video · Project Leading |
 | **방태림** Taerim Bang | GUI Design & Prototyping · Product Design · Brand Design |
 | 공통 | UX Design · Validation and QA |
